@@ -12,6 +12,11 @@ from mmcv.cnn.bricks.transformer import TransformerLayerSequence
 from mmdet.models.utils.transformer import Transformer, DeformableDetrTransformer, DeformableDetrTransformerDecoder
 from mmdet.models.utils.builder import TRANSFORMER
 
+from mmcv.cnn.bricks.registry import (TRANSFORMER_LAYER,
+                                      TRANSFORMER_LAYER_SEQUENCE)
+
+from ._transformer import BaseTransformerLayer_
+
 
 def inverse_sigmoid(x, eps=1e-5):
     """Inverse function of sigmoid.
@@ -177,7 +182,7 @@ class CoDeformableDetrTransformer(DeformableDetrTransformer):
         scale = 2 * math.pi
         dim_t = torch.arange(
             num_pos_feats, dtype=torch.float32, device=proposals.device)
-        dim_t = temperature**(2 * (dim_t // 2) / num_pos_feats)
+        dim_t = temperature**(2 * (torch.div(dim_t, 2, rounding_mode='trunc')) / num_pos_feats)
         # N, L, 4
         proposals = proposals.sigmoid() * scale
         # N, L, 4, 128
@@ -454,6 +459,14 @@ def build_MLP(input_dim, hidden_dim, output_dim, num_layers):
     layers.append(nn.Linear(hidden_dim, output_dim))
     return nn.Sequential(*layers)
 
+def build_Adapter(input_dim, hidden_dim, output_dim):
+    A_layers = list()
+    A_layers.append(nn.Linear(input_dim, hidden_dim))
+    A_layers.append(nn.ReLU())
+    A_layers.append(nn.Linear(hidden_dim, output_dim))
+    return nn.Sequential(*A_layers)
+    
+
 @TRANSFORMER_LAYER_SEQUENCE.register_module()
 class DinoTransformerDecoder(DeformableDetrTransformerDecoder):
 
@@ -464,6 +477,8 @@ class DinoTransformerDecoder(DeformableDetrTransformerDecoder):
     def _init_layers(self):
         self.ref_point_head = build_MLP(self.embed_dims * 2, self.embed_dims,
                                         self.embed_dims, 2)
+        # self.adapter = build_Adapter(self.embed_dims * 2, self.embed_dims // 2,self.embed_dims)
+        # self.adapter_dec = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
         self.norm = nn.LayerNorm(self.embed_dims)
 
     @staticmethod
@@ -473,7 +488,7 @@ class DinoTransformerDecoder(DeformableDetrTransformerDecoder):
         scale = 2 * math.pi
         dim_t = torch.arange(
             pos_feat, dtype=torch.float32, device=pos_tensor.device)
-        dim_t = 10000**(2 * (dim_t // 2) / pos_feat)
+        dim_t = 10000**(2 * (torch.div(dim_t, 2, rounding_mode='trunc')) / pos_feat)
         x_embed = pos_tensor[:, :, 0] * scale
         y_embed = pos_tensor[:, :, 1] * scale
         pos_x = x_embed[:, :, None] / dim_t
@@ -524,16 +539,20 @@ class DinoTransformerDecoder(DeformableDetrTransformerDecoder):
                     reference_points[:, :, None] * valid_ratios[:, None]
 
             query_sine_embed = self.gen_sineembed_for_position(
-                reference_points_input[:, :, 0, :], self.embed_dims//2)
+                reference_points_input[:, :, 0, :], self.embed_dims//2) 
+            # res = self.adapter(query_sine_embed)
             query_pos = self.ref_point_head(query_sine_embed)
-
+            # query_pos = query_pos + res * nn.Parameter(torch.ones(1)).to('cuda:0')
             query_pos = query_pos.permute(1, 0, 2)
+
+            # res_o = self.adapter_dec(output)
             output = layer(
                 output,
                 *args,
                 query_pos=query_pos,
                 reference_points=reference_points_input,
                 **kwargs)
+            # output = output + res_o
             output = output.permute(1, 0, 2)
 
             if reg_branches is not None:
@@ -776,3 +795,48 @@ class CoDinoTransformer(CoDeformableDetrTransformer):
         inter_references_out = inter_references
 
         return inter_states, inter_references_out
+
+@TRANSFORMER_LAYER.register_module()
+class DetrTransformerDecoderLayer_(BaseTransformerLayer_):
+    """Implements decoder layer in DETR transformer.
+
+    Args:
+        attn_cfgs (list[`mmcv.ConfigDict`] | list[dict] | dict )):
+            Configs for self_attention or cross_attention, the order
+            should be consistent with it in `operation_order`. If it is
+            a dict, it would be expand to the number of attention in
+            `operation_order`.
+        feedforward_channels (int): The hidden dimension for FFNs.
+        ffn_dropout (float): Probability of an element to be zeroed
+            in ffn. Default 0.0.
+        operation_order (tuple[str]): The execution order of operation
+            in transformer. Such as ('self_attn', 'norm', 'ffn', 'norm').
+            Default：None
+        act_cfg (dict): The activation config for FFNs. Default: `LN`
+        norm_cfg (dict): Config dict for normalization layer.
+            Default: `LN`.
+        ffn_num_fcs (int): The number of fully-connected layers in FFNs.
+            Default：2.
+    """
+
+    def __init__(self,
+                 attn_cfgs,
+                 feedforward_channels,
+                 ffn_dropout=0.0,
+                 operation_order=None,
+                 act_cfg=dict(type='ReLU', inplace=True),
+                 norm_cfg=dict(type='LN'),
+                 ffn_num_fcs=2,
+                 **kwargs):
+        super(DetrTransformerDecoderLayer_, self).__init__(
+            attn_cfgs=attn_cfgs,
+            feedforward_channels=feedforward_channels,
+            ffn_dropout=ffn_dropout,
+            operation_order=operation_order,
+            act_cfg=act_cfg,
+            norm_cfg=norm_cfg,
+            ffn_num_fcs=ffn_num_fcs,
+            **kwargs)
+        assert len(operation_order) == 6
+        assert set(operation_order) == set(
+            ['self_attn', 'norm', 'cross_attn', 'ffn'])

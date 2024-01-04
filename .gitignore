@@ -160,4 +160,12 @@ cython_debug/
 #.idea/
 
 outputs/
+<<<<<<< HEAD
 data/
+=======
+data/
+
+*.jpg
+*.png
+*.pth
+>>>>>>> f2b9a32 (Initial commit)

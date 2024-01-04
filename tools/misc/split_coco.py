@@ -29,7 +29,7 @@ def parse_args():
         type=float,
         nargs='+',
         help='The percentage of labeled data in the training set.',
-        default=[1, 2, 5, 10])
+        default=[0, 1, 2, 5, 10])
     parser.add_argument(
         '--fold',
         type=int,
@@ -54,9 +54,9 @@ def split_coco(data_root, out_dir, percent, fold):
         sub_anns = dict()
         sub_anns['images'] = images
         sub_anns['annotations'] = annotations
-        sub_anns['licenses'] = anns['licenses']
+        # sub_anns['licenses'] = anns['licenses']
         sub_anns['categories'] = anns['categories']
-        sub_anns['info'] = anns['info']
+        # sub_anns['info'] = anns['info']
 
         mmcv.mkdir_or_exist(out_dir)
         mmcv.dump(sub_anns, f'{out_dir}/{name}.json')
@@ -87,6 +87,8 @@ def split_coco(data_root, out_dir, percent, fold):
         if ann['image_id'] in labeled_ids:
             labeled_annotations.append(ann)
         else:
+            ann['bbox'] = None
+            ann['category_id'] = None
             unlabeled_annotations.append(ann)
 
     # save labeled and unlabeled

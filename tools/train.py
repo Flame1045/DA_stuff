@@ -30,6 +30,17 @@ def parse_args():
     parser.add_argument(
         '--resume-from', help='the checkpoint file to resume from')
     parser.add_argument(
+        '--load-from', help='the checkpoint file to load from')
+    parser.add_argument(
+        '--adapter', 
+        action='store_true',
+        help='adapter')
+    parser.add_argument(
+        '--adapter_choose', 
+        nargs='+', 
+        default=[]
+        )
+    parser.add_argument(
         '--auto-resume',
         action='store_true',
         help='resume from the latest checkpoint automatically')
@@ -150,6 +161,12 @@ def main():
 
     if args.resume_from is not None:
         cfg.resume_from = args.resume_from
+    if args.load_from is not None:
+        cfg.load_from = args.load_from
+    if args.adapter is not None:
+        cfg.adapter = args.adapter
+    if args.adapter_choose is not None:
+        cfg.adapter_choose = args.adapter_choose
     cfg.auto_resume = args.auto_resume
     if args.gpus is not None:
         cfg.gpu_ids = range(1)
@@ -183,7 +200,6 @@ def main():
     timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
     log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
     logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
-
     # init the meta dict to record some important information such as
     # environment info and seed, which will be logged
     meta = dict()
@@ -231,6 +247,35 @@ def main():
             CLASSES=datasets[0].CLASSES)
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
+
+
+    if cfg.adapter:
+        # trainable_layers = ["adapter","da_head","rpn_head","roi_head", "bbox_head"] 
+        trainable_layers = cfg.adapter_choose
+        for name, param in model.named_parameters():
+            for name_layer in trainable_layers:
+                if name_layer in name:
+                    param.requires_grad = True
+                    break
+                else:
+                    param.requires_grad = False
+        for name, param in model.named_parameters():
+            logger.info(f"{name}, _is_trained:{param.requires_grad}")
+    else:
+        trainable_layers = ["da_head"] 
+        for name, param in model.named_parameters():
+            for name_layer in trainable_layers:
+                if name_layer in name:
+                    param.requires_grad = True
+                    break
+                else:
+                    param.requires_grad = False
+        for name, param in model.named_parameters():
+            logger.info(f"{name}, _is_trained:{param.requires_grad}")
+
+    # if True:
+    #     Grad_Cam(model, )
+
     train_detector(
         model,
         datasets,
@@ -243,3 +288,39 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def Grad_Cam(model, img):
+    from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
+
+    # model = resnet50(pretrained=True)
+    target_layers = [model.da_head.conv3.weight]
+    input_tensor = img
+    # Create an input tensor image for your model..
+    # Note: input_tensor can be a batch tensor with several images!
+
+    # Construct the CAM object once, and then re-use it on many images:
+    cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
+
+    # You can also use it within a with statement, to make sure it is freed,
+    # In case you need to re-create it inside an outer loop:
+    # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
+    #   ...
+
+    # We have to specify the target we want to generate
+    # the Class Activation Maps for.
+    # If targets is None, the highest scoring category
+    # will be used for every image in the batch.
+    # Here we use ClassifierOutputTarget, but you can define your own custom targets
+    # That are, for example, combinations of categories, or specific outputs in a non standard model.
+
+    targets = [ClassifierOutputTarget(281)]
+
+    # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
+    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
+
+    # In this example grayscale_cam has only one image in the batch:
+    grayscale_cam = grayscale_cam[0, :]
+    visualization = show_cam_on_image(input_tensor, grayscale_cam, use_rgb=True) 

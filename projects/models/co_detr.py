@@ -6,6 +6,7 @@ import torch.nn as nn
 from mmdet.core import bbox2result
 from mmdet.models.builder import DETECTORS, build_backbone, build_head, build_neck
 from mmdet.models.detectors.base import BaseDetector
+from mmdet.utils import get_root_logger
 
 
 @DETECTORS.register_module()
@@ -14,6 +15,7 @@ class CoDETR(BaseDetector):
                  backbone,
                  neck=None,
                  query_head=None,
+                 da_head=None,
                  rpn_head=None,
                  roi_head=[None],
                  bbox_head=[None],
@@ -33,11 +35,17 @@ class CoDETR(BaseDetector):
         # Module index for evaluation
         self.eval_index = eval_index
         self.backbone = build_backbone(backbone)
-
+        self.logger_n = get_root_logger()
+        # self.model2222 = self
         head_idx = 0
 
         if neck is not None:
             self.neck = build_neck(neck)
+
+        if da_head is not None:
+            self.da_head = build_head(da_head)
+        else:
+            self.da_head = None
 
         if query_head is not None:
             query_head.update(train_cfg=train_cfg[head_idx] if (train_cfg is not None and train_cfg[head_idx] is not None) else None)
@@ -73,6 +81,9 @@ class CoDETR(BaseDetector):
         self.head_idx = head_idx
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg
+        self.bbox_head.GradCAM = False
+        self.rpn_head.GradCAM = False
+        self.roi_head.GradCAM = False
 
     @property
     def with_rpn(self):
@@ -153,6 +164,9 @@ class CoDETR(BaseDetector):
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
+        if self.da_head is not None:
+            self.da_head.acc = False
+
         batch_input_shape = tuple(img[0].size()[-2:])
         for img_meta in img_metas:
             img_meta['batch_input_shape'] = batch_input_shape
@@ -163,6 +177,7 @@ class CoDETR(BaseDetector):
                 img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
 
         x = self.extract_feat(img, img_metas)
+        in_da_feat = x
 
         losses = dict()
         def upd_loss(losses, idx, weight=1):
@@ -228,7 +243,55 @@ class CoDETR(BaseDetector):
                 bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
                                                             gt_labels, gt_bboxes_ignore, positive_coords[i], i)
                 bbox_losses = upd_loss(bbox_losses, idx=i)
-                losses.update(bbox_losses)                    
+                losses.update(bbox_losses)  
+
+        query_list = self.simple_test_query_head(img, img_metas)
+
+        if self.da_head is not None and self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
+            da_loss = self.da_head(in_da_feat, img_metas)
+            da_loss = upd_loss(da_loss, idx=i)
+            losses.update(da_loss)
+            return losses
+
+        if self.da_head is not None and self.da_head.GradCAM == True:
+            da_loss = self.da_head(in_da_feat, img_metas)
+            return da_loss
+
+        if self.rpn_head.GradCAM == True:
+            rpn_loss = self.rpn_head.forward_train(
+                x,
+                img_metas,
+                gt_bboxes,
+                gt_labels=None,
+                gt_bboxes_ignore=gt_bboxes_ignore,
+                proposal_cfg=proposal_cfg,
+                **kwargs)
+            return rpn_loss[0]['loss_rpn_cls']
+        
+        if self.roi_head.GradCAM == True:
+            for i in range(len(self.roi_head)):
+                roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+                                                        gt_bboxes, gt_labels,
+                                                        gt_bboxes_ignore, gt_masks,
+                                                        **kwargs)
+                if self.with_pos_coord:
+                    positive_coords.append(roi_losses.pop('pos_coords'))
+                else: 
+                    if 'pos_coords' in roi_losses.keys():
+                        tmp = roi_losses.pop('pos_coords')     
+                return [roi_losses['loss_cls']]
+            
+        if self.bbox_head.GradCAM == True:
+            for i in range(len(self.bbox_head)):
+                bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
+                                                            gt_labels, gt_bboxes_ignore)
+                if self.with_pos_coord:
+                    pos_coords = bbox_losses.pop('pos_coords')
+                    positive_coords.append(pos_coords)
+                else:
+                    if 'pos_coords' in bbox_losses.keys():
+                        tmp = bbox_losses.pop('pos_coords')          
+                return bbox_losses['loss_cls']
 
         return losses
 
@@ -324,12 +387,28 @@ class CoDETR(BaseDetector):
         return bbox_results
 
     def simple_test(self, img, img_metas, proposals=None, rescale=False):
+        if self.da_head is not None:
+            self.da_head.acc = True
         """Test without augmentation."""
         assert self.eval_module in ['detr', 'one-stage', 'two-stage']
         if self.with_bbox and self.eval_module=='one-stage':
             return self.simple_test_query_head(img, img_metas, proposals, rescale)
         if self.with_roi_head and self.eval_module=='two-stage':
             return self.simple_test_roi_head(img, img_metas, proposals, rescale)
+        if self.da_head is not None:
+            batch_input_shape = tuple(img[0].size()[-2:])
+            for img_meta in img_metas:
+                img_meta['batch_input_shape'] = batch_input_shape
+            if not self.with_attn_mask: # remove attn mask for LSJ
+                for i in range(len(img_metas)):
+                    input_img_h, input_img_w = img_metas[i]['batch_input_shape']
+                    img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
+            x = self.extract_feat(img, img_metas)
+            acc = self.da_head(x, img_metas)
+            if acc is not None:
+                self.logger_n.info(f"acc: {acc}")
+                self.logger_n.info(f"acc: {acc}")
+                self.logger_n.info(f"acc: {acc}")
         return self.simple_test_query_head(img, img_metas, proposals, rescale)
 
     def aug_test(self, imgs, img_metas, rescale=False):
@@ -394,3 +473,38 @@ class CoDETR(BaseDetector):
             *outs, img_metas, with_nms=with_nms)
 
         return det_bboxes, det_labels
+    
+def Grad_Cam(model, img):
+    from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
+
+    # model = resnet50(pretrained=True)
+    target_layers = [model.da_head.conv3]
+    input_tensor = img
+    # Create an input tensor image for your model..
+    # Note: input_tensor can be a batch tensor with several images!
+
+    # Construct the CAM object once, and then re-use it on many images:
+    cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
+
+    # You can also use it within a with statement, to make sure it is freed,
+    # In case you need to re-create it inside an outer loop:
+    # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
+    #   ...
+
+    # We have to specify the target we want to generate
+    # the Class Activation Maps for.
+    # If targets is None, the highest scoring category
+    # will be used for every image in the batch.
+    # Here we use ClassifierOutputTarget, but you can define your own custom targets
+    # That are, for example, combinations of categories, or specific outputs in a non standard model.
+
+    targets = [ClassifierOutputTarget(1)]
+
+    # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
+    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
+
+    # In this example grayscale_cam has only one image in the batch:
+    grayscale_cam = grayscale_cam[0, :]
+    visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True) 

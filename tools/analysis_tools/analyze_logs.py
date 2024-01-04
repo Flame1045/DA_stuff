@@ -6,6 +6,8 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import time
+import sys
 
 
 def cal_train_time(log_dicts, args):
@@ -34,6 +36,18 @@ def cal_train_time(log_dicts, args):
         print(f'average iter time: {np.mean(all_times):.4f} s/iter')
         print()
 
+def annot_max(x,y, ax=None):
+    xmax = x[np.argmax(y)]
+    ymax = y.max()
+    text= "iters={:.3f}, acc={:.3f}".format(xmax, ymax)
+    if not ax:
+        ax=plt.gca()
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+    arrowprops=dict(arrowstyle="->",connectionstyle="angle,angleA=0,angleB=60")
+    kw = dict(xycoords='data',textcoords="axes fraction",
+              arrowprops=arrowprops, bbox=bbox_props, ha="right", va="top")
+    ax.annotate(text, xy=(xmax, ymax), xytext=(0.94,0.96), **kw)
+
 
 def plot_curve(log_dicts, args):
     if args.backend is not None:
@@ -45,13 +59,15 @@ def plot_curve(log_dicts, args):
         legend = []
         for json_log in args.json_logs:
             for metric in args.keys:
-                legend.append(f'{json_log}_{metric}')
+                # legend.append(f'{json_log}_{metric}')
+                legend.append(f'{metric}')
     assert len(legend) == (len(args.json_logs) * len(args.keys))
     metrics = args.keys
 
     num_metrics = len(metrics)
     for i, log_dict in enumerate(log_dicts):
         epochs = list(log_dict.keys())
+        total_remove = 0
         for j, metric in enumerate(metrics):
             print(f'plot curve of {args.json_logs[i]}, metric is {metric}')
             if metric not in log_dict[epochs[int(args.eval_interval) - 1]]:
@@ -68,33 +84,75 @@ def plot_curve(log_dicts, args):
             if 'mAP' in metric:
                 xs = []
                 ys = []
+                s = 10
                 for epoch in epochs:
                     ys += log_dict[epoch][metric]
-                    if 'val' in log_dict[epoch]['mode']:
-                        xs.append(epoch)
-                plt.xlabel('epoch')
-                plt.plot(xs, ys, label=legend[i * num_metrics + j], marker='o')
+                    # if 'val' in log_dict[epoch]['mode']:
+                    #     xs.append(epoch)
+                # print("log_dict:",log_dict[epoch]['mode'])
+                for ss, _ in enumerate(ys):
+                    xs.append((ss+1)*100)
+                    ys[ss] = ys[ss]*100
+                # print("xs:",xs)
+                # print(len(xs))
+                # print("ys:",ys)
+                # print(len(ys))
+                fig, ax = plt.subplots()
+                xs = np.array(xs)
+                ys = np.array(ys)
+                # ax.plot(xs,ys)
+                # ax.legend(loc='upper left')
+                annot_max(xs,ys)
+                plt.xlabel('iter')
+                plt.ylabel('bbox_mAP_50')
+                plt.plot(xs, ys, label=legend[i * num_metrics + j][-11:], marker='o')
+                plt.legend(legend[i * num_metrics + j][-11:], loc='upper right')
             else:
+                FLAG = True
                 xs = []
                 ys = []
                 num_iters_per_epoch = log_dict[epochs[0]]['iter'][-2]
                 for epoch in epochs:
                     iters = log_dict[epoch]['iter']
+                    print(iters)
                     if log_dict[epoch]['mode'][-1] == 'val':
                         iters = iters[:-1]
+                    iters = [x for x in iters if not x == 500] # ignore val
+                    print(iters)
                     xs.append(
                         np.array(iters) + (epoch - 1) * num_iters_per_epoch)
                     ys.append(np.array(log_dict[epoch][metric][:len(iters)]))
                 xs = np.concatenate(xs)
                 ys = np.concatenate(ys)
-                plt.xlabel('iter')
-                plt.plot(
-                    xs, ys, label=legend[i * num_metrics + j], linewidth=0.5)
-            plt.legend()
+                print("before:",j)
+                if np.max(ys) <= 1.0 and 'da' not in metric :
+                    # print(len(legend))
+                    # print(metric)
+                    legend.remove(metric)
+                    FLAG = False
+                    # print(len(legend))
+                    num_metrics = num_metrics - 1
+                    total_remove = total_remove + 1
+                if FLAG:
+                    plt.xlabel('iter')
+                    # print('xs:',xs.shape, xs)
+                    # print('ys:',ys.shape, ys)
+                    # print("after:",j)
+                    # print(len(legend))
+                    plt.plot(
+                        xs, ys, label=legend[i * num_metrics + j - total_remove], linewidth=0.5)
+            plt.legend(legend, loc='upper right')
         if args.title is not None:
             plt.title(args.title)
     if args.out is None:
-        plt.show()
+        manager = plt.get_current_fig_manager()
+        manager.full_screen_toggle()   
+        plt.show(block=False)
+        plt.pause(3)
+        plt.close()
+        print("exiting the program")
+        print(sys.exit())
+
     else:
         print(f'save curve to: {args.out}')
         plt.savefig(args.out)

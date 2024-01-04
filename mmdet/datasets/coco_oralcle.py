@@ -20,7 +20,7 @@ from .custom import CustomDataset
 
 
 @DATASETS.register_module()
-class CocoDataset(CustomDataset):
+class CocoDatasetOralcle(CustomDataset):
 
     CLASSES = ('person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
                'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
@@ -161,29 +161,22 @@ class CocoDataset(CustomDataset):
         for i, ann in enumerate(ann_info):
             if ann.get('ignore', False):
                 continue
-            if ann.get('bbox', None) is None:
-                # gt_bboxes.append(np.zeros((0, 4), dtype=np.float32))
+            x1, y1, w, h = ann['bbox']
+            inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
+            inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
+            if inter_w * inter_h == 0:
                 continue
-            if ann.get('category_id', None) is None:
-                # gt_labels.append(np.array([], dtype=np.int64))
+            if ann['area'] <= 0 or w < 1 or h < 1:
                 continue
+            if ann['category_id'] not in self.cat_ids:
+                continue
+            bbox = [x1, y1, x1 + w, y1 + h]
+            if ann.get('iscrowd', False):
+                gt_bboxes_ignore.append(bbox)
             else:
-                x1, y1, w, h = ann['bbox']
-                inter_w = max(0, min(x1 + w, img_info['width']) - max(x1, 0))
-                inter_h = max(0, min(y1 + h, img_info['height']) - max(y1, 0))
-                bbox = [x1, y1, x1 + w, y1 + h]
-                if inter_w * inter_h == 0:
-                    continue
-                if ann['area'] <= 0 or w < 1 or h < 1:
-                    continue
-                if ann['category_id'] not in self.cat_ids:
-                    continue
-                if ann.get('iscrowd', False):
-                    gt_bboxes_ignore.append(bbox)
-                else:
-                    gt_bboxes.append(bbox)
-                    gt_labels.append(self.cat2label[ann['category_id']])
-                    gt_masks_ann.append(ann.get('segmentation', None))
+                gt_bboxes.append(bbox)
+                gt_labels.append(self.cat2label[ann['category_id']])
+                gt_masks_ann.append(ann.get('segmentation', None))
 
         if gt_bboxes:
             gt_bboxes = np.array(gt_bboxes, dtype=np.float32)

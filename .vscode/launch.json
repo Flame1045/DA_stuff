@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["projects/configs/co_dino/custom_sim2city_unsupervised_wA.py","--adapter", "--work-dir","outputs/DEBUG",
+                     "--deterministic", "--adapter_choose", "adapter", "da_head", "scalar"]
+        }
+    ]
+}

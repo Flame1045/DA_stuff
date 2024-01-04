@@ -347,7 +347,8 @@ class CoDINOHead(CoDeformDETRHead):
         num_bboxes = dn_bbox_pred.size(0)
 
         if len(gt_labels) > 0:
-            t = torch.range(0, len(gt_labels) - 1).long().cuda()
+            t = torch.arange(0, len(gt_labels)).long().cuda()
+            # t = torch.range(0, len(gt_labels) - 1).long().cuda()
             t = t.unsqueeze(0).repeat(num_groups, 1)
             pos_assigned_gt_inds = t.flatten()
             pos_inds = (torch.tensor(range(num_groups)) *

@@ -14,6 +14,7 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
 
     def __init__(self, init_cfg=None):
         super(BaseDenseHead, self).__init__(init_cfg)
+        self.GradCAM = False
 
     def init_weights(self):
         super(BaseDenseHead, self).init_weights()

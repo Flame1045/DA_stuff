@@ -237,7 +237,9 @@ def train_detector(model,
         resume_from = find_latest_checkpoint(cfg.work_dir)
     if resume_from is not None:
         cfg.resume_from = resume_from
-
+    # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(cfg.load_from)
+    # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     if cfg.resume_from:
         runner.resume(cfg.resume_from)
     elif cfg.load_from:
