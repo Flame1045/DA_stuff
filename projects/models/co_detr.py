@@ -177,7 +177,7 @@ class CoDETR(BaseDetector):
                 img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
 
         x = self.extract_feat(img, img_metas)
-        in_da_feat = x
+        # in_da_feat = x
 
         losses = dict()
         def upd_loss(losses, idx, weight=1):
@@ -194,6 +194,7 @@ class CoDETR(BaseDetector):
             bbox_losses, x = self.query_head.forward_train(x, img_metas, gt_bboxes,
                                                           gt_labels, gt_bboxes_ignore)
             losses.update(bbox_losses)
+            in_da_feat = x
             
 
         # RPN forward and loss
