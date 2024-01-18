@@ -8,6 +8,111 @@ from mmdet.models.builder import DETECTORS, build_backbone, build_head, build_ne
 from mmdet.models.detectors.base import BaseDetector
 from mmdet.utils import get_root_logger
 
+class SpatialWiseFusion(nn.Module):
+    def __init__(self, input_channels):
+        super(SpatialWiseFusion, self).__init__()
+
+        # Normalization layer
+        self.norm_layer = nn.BatchNorm2d(input_channels, affine=False)
+
+        # Learnable weight map
+        self.weight_map = nn.Parameter(torch.ones(1, input_channels, 1, 1))
+
+        # Learnable bias map
+        self.bias_map = nn.Parameter(torch.zeros(1, input_channels, 1, 1))
+
+        # Activation function
+        self.activation = nn.Sigmoid()
+
+    def forward(self, x):
+        # Apply normalization
+        normalized_x = self.norm_layer(x)
+
+        # Apply re-weighting and re-biasing
+        weighted_x = normalized_x * self.weight_map + self.bias_map
+
+        # Apply activation function
+        activated_x = self.activation(weighted_x)
+
+        return activated_x
+
+class ChannelWiseFusion(nn.Module):
+    def __init__(self, input_channels):
+        super(ChannelWiseFusion, self).__init__()
+
+        # Global Average Pooling (GAP)
+        self.global_avg_pooling = nn.AdaptiveAvgPool2d(1)
+
+        # Learnable weight vector
+        self.weight_vector = nn.Parameter(torch.ones(1, input_channels, 1, 1))
+
+        # Learnable bias vector
+        self.bias_vector = nn.Parameter(torch.zeros(1, input_channels, 1, 1))
+
+        # Sigmoid activation function
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        # Apply Global Average Pooling (GAP)
+        pooled_x = self.global_avg_pooling(x)
+
+        # Reshape to match the weight and bias vectors
+        pooled_x = pooled_x.view(pooled_x.size(0), pooled_x.size(1), 1, 1)
+
+        # Apply re-weighting and re-biasing
+        weighted_x = pooled_x * self.weight_vector + self.bias_vector
+
+        # Apply sigmoid activation function to limit the output in the range of 0 to 1
+        output = self.sigmoid(weighted_x)
+
+        return output
+
+
+
+class ScaleAggregationFusion(nn.Module):
+    def __init__(self, input_channels, num_scales):
+        super(ScaleAggregationFusion, self).__init__()
+
+        self.num_scales = num_scales
+        # Global Average Pooling (GAP) for each scale
+        self.gap_layers = nn.ModuleList([nn.AdaptiveAvgPool2d(1) for _ in range(num_scales)])
+
+        # Fully connected layer to obtain scale-weight vectors A
+        self.fc_layer = nn.Linear(input_channels, num_scales * input_channels)
+
+        # Sigmoid activation to ensure scale weights are between 0 and 1
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, feature_list):
+        # Calculate channel-wise vectors u for each scale
+        scale_vectors = [gap_layer(feature) for gap_layer, feature in zip(self.gap_layers, feature_list)]
+
+        # Merge channel-wise vectors using element-wise addition
+        merged_vector = torch.stack(scale_vectors, dim=1).sum(dim=1)
+
+        # Flatten the merged vector
+        flattened_vector = merged_vector.view(merged_vector.size(0), -1)
+
+        # Obtain scale-weight vectors using a fully connected layer
+        scale_weights = self.fc_layer(flattened_vector)
+
+        # Reshape the output to create a list of tensors
+        # scale_weights_list = torch.chunk(scale_weights, chunks=self.num_scales, dim=1)
+
+        # Reshape each tensor in the list to [batch_size, input_channels, 1, 1]
+        scale_weights_list = [scale_weights[:, i * input_tensor.size(1):(i + 1) * input_tensor.size(1)].view(input_tensor.size(0), -1, 1, 1)
+                              for i, input_tensor in enumerate(feature_list)]
+
+
+        # # Apply sigmoid activation to ensure scale weights are between 0 and 1
+        # scale_weights = self.sigmoid(scale_weights)
+
+        # Multiply each feature by its corresponding scale weight and sum them
+        mul_feature = [feature * scale_weights_list[i] for i, feature in enumerate(feature_list)]
+        # fused_feature = torch.sum(torch.stack(mul_feature, dim=1), dim=1)
+
+        return mul_feature[0], scale_weights
+
 
 @DETECTORS.register_module()
 class CoDETR(BaseDetector):
@@ -177,7 +282,7 @@ class CoDETR(BaseDetector):
                 img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
 
         x = self.extract_feat(img, img_metas)
-        # in_da_feat = x
+        CNN_feat = x
 
         losses = dict()
         def upd_loss(losses, idx, weight=1):
@@ -194,8 +299,60 @@ class CoDETR(BaseDetector):
             bbox_losses, x = self.query_head.forward_train(x, img_metas, gt_bboxes,
                                                           gt_labels, gt_bboxes_ignore)
             losses.update(bbox_losses)
-            in_da_feat = x
+            TRNSF_feat = x
+
+        # CT Blender
+        # Split-Merge Fusion
+        # Initialize lists to store cnn_chunks
+        concatenated_hierarchical = []
+        for i in range(0,5):
+            Trn = TRNSF_feat[i]
+            Cnn = CNN_feat[i]
+            num_chunks = 2
+            # Check if the input_tensor can be evenly split
+            assert Trn.size(1) % num_chunks == 0, f"Cannot evenly split tensor along dimension 1 into {num_chunks} chunks."
+            Trn_chunks = torch.chunk(Trn, num_chunks, dim=1) # T split channels (K groups)
+            # Check if the input_tensor can be evenly split
+            assert Cnn.size(1) % num_chunks == 0, f"Cannot evenly split tensor along dimension 1 into {num_chunks} chunks."
+            Cnn_chunks = torch.chunk(Cnn, num_chunks, dim=1) # C split channels (K groups)
+
+            # Initialize lists to store cnn_chunks
+            concatenated_cnn_chunks = []
+            for j in range(0,num_chunks):
+                # each layer of C and T
+                trn_chunks = Trn_chunks[j].to("cuda:0")
+                cnn_chunks = Cnn_chunks[j].to("cuda:0")
+
+                # spatial(5)
+                spatial_fusion_module = SpatialWiseFusion(input_channels=trn_chunks.size(1)).to("cuda:0")
+                spatial_output_tensor = spatial_fusion_module(trn_chunks)
+
+                # global(6)
+                global_fusion_module = ChannelWiseFusion(input_channels=trn_chunks.size(1)).to("cuda:0")
+                global_output_tensor = global_fusion_module(trn_chunks)
             
+                # re-weight by (5) and (6)
+                cnn_chunks = cnn_chunks * spatial_output_tensor
+                cnn_chunks = cnn_chunks * global_output_tensor
+
+                # shuffle K times
+
+
+                # Append the re-weighted cnn_chunks to the list
+                concatenated_cnn_chunks.append(cnn_chunks)
+
+            # Concatenate the cnn_chunks outside the loop
+            concatenated_cnn_chunks = torch.cat(concatenated_cnn_chunks, dim=1)
+            concatenated_hierarchical.append(concatenated_cnn_chunks)
+
+        # Instantiate the ScaleAggregationFusion module
+        saf_module = ScaleAggregationFusion(input_channels=concatenated_hierarchical[0].size(1), 
+                                            num_scales=len(concatenated_hierarchical)).to("cuda:0")
+
+        # Forward pass
+        fused_feature, scale_weights = saf_module(concatenated_hierarchical)
+            
+        in_da_feat = fused_feature  
 
         # RPN forward and loss
         if self.with_rpn:

@@ -106,7 +106,7 @@ class DAHead(BaseModule):
         # cat = torch.mean(cat, 1, True)
         # prob_cat = F.sigmoid(cat)
         loss_ret = 0.0
-        in_da_feat_ = in_da_feat[-1]
+        in_da_feat_ = in_da_feat
         for i, feat in enumerate(in_da_feat_):
             x = self.grl(feat, self.Alpha)
             x = F.relu(self.conv1(x))
