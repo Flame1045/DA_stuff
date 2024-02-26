@@ -965,7 +965,7 @@ class CoDeformDETRHead(DETRHead):
         labels = gt_bboxes.new_full((num_bboxes, ),
                                     self.num_classes,
                                     dtype=torch.long)
-        labels[pos_inds] = gt_labels[sampling_result.pos_assigned_gt_inds]
+        labels[pos_inds] = gt_labels[sampling_result.pos_assigned_gt_inds].long()
         label_weights = gt_bboxes.new_ones(num_bboxes)
 
         # bbox targets

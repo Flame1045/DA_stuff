@@ -34,6 +34,12 @@ except ImportError:
                   '``mmcv.ops.multi_scale_deform_attn``, '
                   'You should install ``mmcv-full`` if you need this module. ')
     
+from natten import NeighborhoodAttention1D
+from natten import NeighborhoodAttention2D
+
+na1d = NeighborhoodAttention1D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
+na2d = NeighborhoodAttention2D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
+    
 def build_positional_encoding(cfg, default_args=None):
     """Builder for Position Encoding."""
     return build_from_cfg(cfg, POSITIONAL_ENCODING, default_args)

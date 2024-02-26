@@ -2,17 +2,20 @@ import math
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 classes = ('car',)
-eval_peroid = 1000
+eval_peroid = 100
 saving_peroid = 2000
-epochs = 5
-batch_size = 2
-numbers_of_images = 12975
+epochs = 3
+batch_size = 1
+target_images = 2975
+source_images = 10000
+numbers_of_images = source_images + target_images * 4
 total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
 
 data = dict(
     samples_per_gpu=batch_size,
     workers_per_gpu=batch_size,
-    train=
+    persistent_workers=True,
+    train = 
         [
             dict(
                 type=dataset_type,
@@ -52,7 +55,7 @@ data = dict(
                 ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco_semi_annos/instances_train2017.1@0-unlabeled.json',
+                ann_file='data/coco/annotations/instances_train2017.json',
                 img_prefix='data/coco/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
@@ -85,7 +88,115 @@ data = dict(
                     dict(
                         type='Collect',
                         keys=['img', 'gt_bboxes', 'gt_labels'])
-            ])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
         ], 
         
     val=dict(

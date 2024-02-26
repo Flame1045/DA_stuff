@@ -20,8 +20,8 @@ def annot_max(x,y, ax=None):
 if __name__ == '__main__':
    acc = []
    iter = []
-   j = 100
-   with open('/media/ee4012/Disk3/Eric/Co-DETR/DA_stuff/outputs/custom_sim2city_unsupervised_lamda_scheduler01_da_head_all_scalar_new256D/20231227_234003.log', 'r') as r:
+   j = 0
+   with open('/media/ee4012/Disk3/Eric/Co-DETR/DA_stuff/outputs/DAAD_NEW/20240206_215601.log', 'r') as r:
       file =  r.readlines()
       print(file)
       i = 0
@@ -29,7 +29,7 @@ if __name__ == '__main__':
          if "acc:" in l:
             i = i + 1
             if (i % 3 == 0):
-               j = j + 100
+               j = j + 10
                acc.append(float(l[46:-1]))
                print(acc)
                iter.append(int(j))
@@ -59,7 +59,8 @@ if __name__ == '__main__':
    #             acc.append(float(l[46:-1]))
    #             print(acc)
    #             iter.append(int(j))
-
+   iter = iter[:]
+   acc = acc[:]
    fig, ax = plt.subplots()
    iter = np.array(iter)
    acc = np.array(acc)
@@ -72,3 +73,10 @@ if __name__ == '__main__':
    plt.xlabel('iterations')
    plt.legend()
    plt.show()
+
+   from natten import NeighborhoodAttention1D
+   from natten import NeighborhoodAttention2D
+
+   na1d = NeighborhoodAttention1D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
+   na2d = NeighborhoodAttention2D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
+

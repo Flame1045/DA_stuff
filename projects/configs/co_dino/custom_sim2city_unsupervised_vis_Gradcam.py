@@ -2,33 +2,22 @@ import math
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 classes = ('car',)
-eval_peroid = 500
-saving_peroid = 500
+eval_peroid = 100
+saving_peroid = 2000
 epochs = 1
 batch_size = 1
-numbers_of_images = 12975
-total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
+target_images = 2975
+source_images = 10000
+numbers_of_images = source_images + target_images * 4
+total_iters = int(math.ceil(numbers_of_images / 4) * epochs) # 25 % of numbers_of_images
 
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
-    train=dict(
-            type='MultiImageMixDataset',
-            ann_file='data/coco/sim10k_train.json',
-            img_prefix='data/coco/JPEGImages/',
-            pipeline=[
-                dict(
-                    type='Normalize',
-                    mean=[123.675, 116.28, 103.53],
-                    std=[58.395, 57.12, 57.375],
-                    to_rgb=True),
-                dict(type='DefaultFormatBundle'),
-                dict(
-                    type='Collect',
-                    keys=['img', 'gt_bboxes', 'gt_labels'])
-            ],
-            filter_empty_gt=False,
-            dataset=dict(
+    samples_per_gpu=batch_size,
+    workers_per_gpu=batch_size,
+    persistent_workers=True,
+    train = 
+        [
+            dict(
                 type=dataset_type,
                 ann_file='data/coco/sim10k_train.json',
                 img_prefix='data/coco/JPEGImages/',
@@ -51,11 +40,165 @@ data = dict(
                         allow_negative_crop=True),
                     dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
                     dict(type='RandomFlip', flip_ratio=0.5),
-                    dict(
-                        type='Pad',
+                    dict(type='Pad',
                         size=(1024, 1024),
-                        pad_val=dict(img=(114, 114, 114)))
-        ])),     
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+                ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+        ], 
+        
     val=dict(
         type=dataset_type,
         ann_file='data/coco/annotations/instances_val2017.json',
@@ -107,18 +250,19 @@ data = dict(
                         std=[58.395, 57.12, 57.375],
                         to_rgb=True),
                     dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+                    dict(type='Collect', keys=['img'])
                 ])
-        ]))
-evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True) #
-checkpoint_config = dict(interval=saving_peroid, by_epoch=False) #
+        ])
+)
+evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True) # 
+checkpoint_config = dict(interval=saving_peroid, by_epoch=False) # 
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'pretrained/co_dino_5scale_9encoder_lsj_r50_3x_coco.pth'
+load_from = None
 resume_from = None
-workflow = [('train', eval_peroid)] #
+workflow = [('train', eval_peroid)] # 
 opencv_num_threads = 0
 mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
@@ -159,8 +303,8 @@ model = dict(
             target_means=[0.0, 0.0, 0.0, 0.0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=12.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=12.0)),
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=0.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=0.0)),
     query_head=dict(
         type='CoDINOHead',
         num_query=900,
@@ -186,7 +330,7 @@ model = dict(
                 num_layers=9,
                 with_cp=9,
                 transformerlayers=dict(
-                    type='BaseTransformerLayer',
+                    type='BaseTransformerLayer_', #####
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -200,7 +344,7 @@ model = dict(
                 num_layers=6,
                 return_intermediate=True,
                 transformerlayers=dict(
-                    type='DetrTransformerDecoderLayer',
+                    type='DetrTransformerDecoderLayer_', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -226,9 +370,9 @@ model = dict(
             type='QualityFocalLoss',
             use_sigmoid=True,
             beta=2.0,
-            loss_weight=1.0),
-        loss_bbox=dict(type='L1Loss', loss_weight=5.0),
-        loss_iou=dict(type='GIoULoss', loss_weight=2.0)),
+            loss_weight=0.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=0.0),
+        loss_iou=dict(type='GIoULoss', loss_weight=0.0)),
     roi_head=[
         dict(
             type='CoStandardRoIHead',
@@ -254,8 +398,8 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
-                    loss_weight=12.0),
-                loss_bbox=dict(type='GIoULoss', loss_weight=120.0)))
+                    loss_weight=0.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=0.0)))
     ],
     bbox_head=[
         dict(
@@ -279,11 +423,18 @@ model = dict(
                 use_sigmoid=True,
                 gamma=2.0,
                 alpha=0.25,
-                loss_weight=12.0),
-            loss_bbox=dict(type='GIoULoss', loss_weight=24.0),
+                loss_weight=0.0),
+            loss_bbox=dict(type='GIoULoss', loss_weight=0.0),
             loss_centerness=dict(
-                type='CrossEntropyLoss', use_sigmoid=True, loss_weight=12.0))
+                type='CrossEntropyLoss', use_sigmoid=True, loss_weight=0.0))
     ],
+    da_head=dict(
+        type='DAHead',
+        loss=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=True,
+        ),
+    ),
     train_cfg=[
         dict(
             assigner=dict(
@@ -359,33 +510,15 @@ model = dict(
     with_attn_mask=False)
 optimizer = dict(
     type='AdamW',
-    lr=0.0002,
+    lr=0.002,
     weight_decay=0.0001,
     paramwise_cfg=dict(custom_keys=dict(backbone=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
+# optimizer_config = dict(grad_clip=None)
 lr_config = dict(policy='step', step=[30])
 # runner = dict(type='EpochBasedRunner', max_epochs=12)
 runner = dict(type='IterBasedRunner', max_iters=total_iters) # 
 image_size = (1024, 1024)
-load_pipeline = [
-    dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
-    dict(
-        type='Resize',
-        img_scale=(1024, 1024),
-        ratio_range=(0.1, 2.0),
-        multiscale_mode='range',
-        keep_ratio=True),
-    dict(
-        type='RandomCrop',
-        crop_type='absolute_range',
-        crop_size=(1024, 1024),
-        recompute_bbox=True,
-        allow_negative_crop=True),
-    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Pad', size=(1024, 1024), pad_val=dict(img=(114, 114, 114)))
-]
 work_dir = 'outputs/co_dino_5scale_9encoder_lsj_r50_3x_coco_oralcle'
 auto_resume = False
 gpu_ids = range(0, 1)

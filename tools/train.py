@@ -36,6 +36,14 @@ def parse_args():
         action='store_true',
         help='adapter')
     parser.add_argument(
+        '--da_head', 
+        action='store_true',
+        help='da_head')
+    parser.add_argument(
+        '--grad_cam', 
+        action='store_true',
+        help='grad_cam')
+    parser.add_argument(
         '--adapter_choose', 
         nargs='+', 
         default=[]
@@ -167,6 +175,10 @@ def main():
         cfg.adapter = args.adapter
     if args.adapter_choose is not None:
         cfg.adapter_choose = args.adapter_choose
+    if args.da_head is not None:
+        cfg.da_head = args.da_head
+    if args.grad_cam is not None:
+        cfg.grad_cam = args.grad_cam
     cfg.auto_resume = args.auto_resume
     if args.gpus is not None:
         cfg.gpu_ids = range(1)
@@ -233,7 +245,7 @@ def main():
     model.init_weights()
 
     datasets = [build_dataset(cfg.data.train)]
-    if len(cfg.workflow) == 2:
+    if len(cfg.workflow) == 3:
         assert 'val' in [mode for (mode, _) in cfg.workflow]
         val_dataset = copy.deepcopy(cfg.data.val)
         val_dataset.pipeline = cfg.data.train.get(
@@ -250,7 +262,6 @@ def main():
 
 
     if cfg.adapter:
-        # trainable_layers = ["adapter","da_head","rpn_head","roi_head", "bbox_head"] 
         trainable_layers = cfg.adapter_choose
         for name, param in model.named_parameters():
             for name_layer in trainable_layers:
@@ -261,15 +272,22 @@ def main():
                     param.requires_grad = False
         for name, param in model.named_parameters():
             logger.info(f"{name}, _is_trained:{param.requires_grad}")
-    else:
-        trainable_layers = ["da_head"] 
+    # elif cfg.da_head:
+    #     trainable_layers = ["da_head", "neck"] 
+    #     for name, param in model.named_parameters():
+    #         for name_layer in trainable_layers:
+    #             if name_layer in name:
+    #                 param.requires_grad = True
+    #                 break
+    #             else:
+    #                 param.requires_grad = False
+    #     for name, param in model.named_parameters():
+    #         logger.info(f"{name}, _is_trained:{param.requires_grad}")
+    if cfg.grad_cam:
         for name, param in model.named_parameters():
-            for name_layer in trainable_layers:
-                if name_layer in name:
-                    param.requires_grad = True
-                    break
-                else:
-                    param.requires_grad = False
+            param.requires_grad = True
+            logger.info(f"{name}, _is_trained:{param.requires_grad}")
+    else:
         for name, param in model.named_parameters():
             logger.info(f"{name}, _is_trained:{param.requires_grad}")
 
@@ -290,37 +308,37 @@ if __name__ == '__main__':
     main()
 
 
-def Grad_Cam(model, img):
-    from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
-    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-    from pytorch_grad_cam.utils.image import show_cam_on_image
+# def Grad_Cam(model, img):
+#     from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+#     from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+#     from pytorch_grad_cam.utils.image import show_cam_on_image
 
-    # model = resnet50(pretrained=True)
-    target_layers = [model.da_head.conv3.weight]
-    input_tensor = img
-    # Create an input tensor image for your model..
-    # Note: input_tensor can be a batch tensor with several images!
+#     # model = resnet50(pretrained=True)
+#     target_layers = [model.da_head.conv3.weight]
+#     input_tensor = img
+#     # Create an input tensor image for your model..
+#     # Note: input_tensor can be a batch tensor with several images!
 
-    # Construct the CAM object once, and then re-use it on many images:
-    cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
+#     # Construct the CAM object once, and then re-use it on many images:
+#     cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
 
-    # You can also use it within a with statement, to make sure it is freed,
-    # In case you need to re-create it inside an outer loop:
-    # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
-    #   ...
+#     # You can also use it within a with statement, to make sure it is freed,
+#     # In case you need to re-create it inside an outer loop:
+#     # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
+#     #   ...
 
-    # We have to specify the target we want to generate
-    # the Class Activation Maps for.
-    # If targets is None, the highest scoring category
-    # will be used for every image in the batch.
-    # Here we use ClassifierOutputTarget, but you can define your own custom targets
-    # That are, for example, combinations of categories, or specific outputs in a non standard model.
+#     # We have to specify the target we want to generate
+#     # the Class Activation Maps for.
+#     # If targets is None, the highest scoring category
+#     # will be used for every image in the batch.
+#     # Here we use ClassifierOutputTarget, but you can define your own custom targets
+#     # That are, for example, combinations of categories, or specific outputs in a non standard model.
 
-    targets = [ClassifierOutputTarget(281)]
+#     targets = [ClassifierOutputTarget(281)]
 
-    # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
-    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
+#     # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
+#     grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
 
-    # In this example grayscale_cam has only one image in the batch:
-    grayscale_cam = grayscale_cam[0, :]
-    visualization = show_cam_on_image(input_tensor, grayscale_cam, use_rgb=True) 
+#     # In this example grayscale_cam has only one image in the batch:
+#     grayscale_cam = grayscale_cam[0, :]
+#     visualization = show_cam_on_image(input_tensor, grayscale_cam, use_rgb=True) 

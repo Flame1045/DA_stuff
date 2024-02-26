@@ -45,7 +45,7 @@ class lamda_scheduler():
     def __init__(self, r):
         self.r = r
     def update(self, p):
-        lamda = 2 / (1 + np.exp(-self.r * p)) - 1 # from 5 to 11
+        lamda = 2 / (1 + np.exp(-self.r * p)) - 1 # from 0 to 1
         return torch.tensor(lamda.astype(float), requires_grad=False)
     
 
@@ -53,15 +53,16 @@ class lamda_scheduler():
 class DAHead(BaseModule):
     def __init__(self,loss):
         super(DAHead, self).__init__()
-        self.conv1 = nn.Conv2d(256, 256, kernel_size=1, stride=1,
-                  padding=0, bias=False)
-        self.conv2 = nn.Conv2d(256, 256, kernel_size=1, stride=1,
-                               padding=0, bias=False)
-        self.conv3 = nn.Conv2d(256, 256, kernel_size=1, stride=1,
-                               padding=0, bias=False)
-        self.flatten = nn.Flatten()
-        self.cls_logits =  nn.Conv2d(256, 1, kernel_size=3, stride=1, padding=1)
-        self.pool = nn.MaxPool2d([2, 2])
+        self.conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1,
+                  padding=0, bias=True)
+        self.conv2 = nn.Conv2d(128, 64, kernel_size=3, stride=1,
+                               padding=0, bias=True)
+        self.conv3 = nn.Conv2d(64, 1, kernel_size=3, stride=1,
+                               padding=0, bias=True)
+        self.fc = nn.Linear(100, 1, bias=True)
+        # self.flatten = nn.Flatten()
+        # self.cls_logits =  nn.Conv2d(256, 1, kernel_size=3, stride=1, padding=1)
+        # self.pool = nn.MaxPool2d([2, 2])
         self.init_weights()
         self.loss = build_loss(loss)
         # self.alpha1 = Variable(torch.cuda.FloatTensor([0.001]), requires_grad=True)# 1
@@ -75,7 +76,7 @@ class DAHead(BaseModule):
         self.normalized_array = (original_array - np.min(original_array)) / (np.max(original_array) - np.min(original_array))
         self.GradCAM = False
         self.acc = False
-        self.Alpha = 0
+        self.Alpha = torch.tensor(1.0, requires_grad=False)
         self.loss_fn = nn.BCEWithLogitsLoss()
     
     def forward(self, in_da_feat, img_metas):
@@ -106,22 +107,32 @@ class DAHead(BaseModule):
         # cat = torch.mean(cat, 1, True)
         # prob_cat = F.sigmoid(cat)
         loss_ret = 0.0
-        in_da_feat_ = in_da_feat
+        in_da_feat_ = in_da_feat[-1]
         for i, feat in enumerate(in_da_feat_):
             x = self.grl(feat, self.Alpha)
             x = F.relu(self.conv1(x))
             x = self.conv2(x)
             x = F.relu(x)  
             x = self.conv3(x)
-            x = self.cls_logits(x)
-            if 'data/coco/train2017/' in img_metas[i]['filename']:
-                label = torch.full(x.shape, 1, dtype=torch.float, device=x.device)  
+            x = x.view(x.size(0), -1)
+            x = self.fc(x)
+            # x = self.cls_logits(x)
+            if img_metas[i]['filename'] is not None:
+                if 'data/coco/train2017/' in img_metas[i]['filename']:
+                    label = torch.full(x.shape, 1, dtype=torch.float, device=x.device)  
+                else:
+                    label = torch.full(x.shape, 0, dtype=torch.float, device=x.device) 
             else:
-                label = torch.full(x.shape, 0, dtype=torch.float, device=x.device) 
+                if img_metas[i]['ori_shape'][1] == 2048:
+                    label = torch.full(x.shape, 1, dtype=torch.float, device=x.device)  
+                else:
+                    label = torch.full(x.shape, 0, dtype=torch.float, device=x.device) 
             loss_ret = loss_ret + self.loss_fn(x, label) 
-        if self.training:
-            return {'da_loss': loss_ret}
-        elif self.GradCAM:
+        loss_ret = loss_ret / len(in_da_feat_)
+
+        ret =  {'da_loss': loss_ret}
+
+        if self.GradCAM:
             return [loss_ret]
         elif self.acc:
             # for i, l in enumerate(prob):
@@ -132,11 +143,11 @@ class DAHead(BaseModule):
             self.total = self.total + 1
             if torch.mean(torch.abs(torch.sub(prob, label))) < 0.2:
                 self.count = self.count + 1.0
-            if self.total == 500:
+            if self.total == 10:
                 acc = (self.count / self.total) * 100.0
                 self.count = 0.0
                 self.total = 0
                 print("Alpha", self.Alpha)
-                return acc
+                return acc, ret
             else:
-                return None
+                return None, ret

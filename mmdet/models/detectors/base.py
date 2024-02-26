@@ -103,7 +103,7 @@ def Grad_CamRPN(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=
     image = Image.fromarray(visualization, mode='RGB')
     image.save('Grad_Cam/' + 'RPNhead_' + str(iiter) + '_' + img_metas[idx]['filename'].split('/')[-1])
 
-def Grad_CamROI(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=None, target_layers = None):
+def Grad_CamAdapter(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=None, target_layers = None, iiter = None):
     from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
     from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget, BinaryClassifierOutputTarget
     from pytorch_grad_cam.utils.image import show_cam_on_image
@@ -147,7 +147,53 @@ def Grad_CamROI(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=
     rgbimg = (rgbimg-np.min(rgbimg))/(np.max(rgbimg)-np.min(rgbimg))
     visualization = show_cam_on_image(rgbimg, grayscale_cam, use_rgb=True) 
     image = Image.fromarray(visualization, mode='RGB')
-    image.save('Grad_Cam/' + 'ROIhead_' + img_metas[idx]['filename'].split('/')[-1])
+    image.save('Grad_Cam/' + 'Adapter_' + str(iiter) + '_' + img_metas[idx]['filename'].split('/')[-1])
+
+def Grad_CamROI(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=None, target_layers = None, iiter = None):
+    from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget, BinaryClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
+
+    # model = resnet50(pretrained=True)
+    target_layers = [target_layers] 
+    input_tensor = img
+    # Create an input tensor image for your model..
+    # Note: input_tensor can be a batch tensor with several images!
+
+    # Construct the CAM object once, and then re-use it on many images:
+    cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
+
+    # You can also use it within a with statement, to make sure it is freed,
+    # In case you need to re-create it inside an outer loop:
+    # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
+    #   ...
+
+    # We have to specify the target we want to generate
+    # the Class Activation Maps for.
+    # If targets is None, the highest scoring category
+    # will be used for every image in the batch.
+    # Here we use ClassifierOutputTarget, but you can define your own custom targets
+    # That are, for example, combinations of categories, or specific outputs in a non standard model.
+
+    targets = [BinaryClassifierOutputTarget(1)]
+
+    # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
+    grayscale_cam = cam(input_tensor=input_tensor, 
+                        img_metas=img_metas,  #############
+                        gt_bboxes=gt_bboxes,  #############
+                        gt_labels=gt_labels,  #############
+                        targets=targets)
+
+    # In this example grayscale_cam has only one image in the batch:
+    grayscale_cam = grayscale_cam[idx, :]
+    # img = np.transpose(img[0].cpu().detach().numpy(), (1, 2, 0))
+    rgbimg = mmcv.imread(img_metas[idx]['filename']).astype(np.uint8)
+    rgbimg = mmcv.bgr2rgb(rgbimg)
+    rgbimg = mmcv.imresize(rgbimg, (1024, 1024), return_scale=False)
+    rgbimg = (rgbimg-np.min(rgbimg))/(np.max(rgbimg)-np.min(rgbimg))
+    visualization = show_cam_on_image(rgbimg, grayscale_cam, use_rgb=True) 
+    image = Image.fromarray(visualization, mode='RGB')
+    image.save('Grad_Cam/' + 'ROIhead_' + str(iiter) + '_'+ img_metas[idx]['filename'].split('/')[-1])
 
 def Grad_CamBBOX(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=None, target_layers = None, iiter = None):
     from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
@@ -203,7 +249,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
     def __init__(self, init_cfg=None):
         super(BaseDetector, self).__init__(init_cfg)
         self.fp16_enabled = False
-        self.num = np.random.randint(0, 6488, 500)
+        self.num = np.random.randint(0, 5475, 500)
         self.iiter = 1
 
     @property
@@ -307,6 +353,10 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
                 augs (multiscale, flip, etc.) and the inner list indicates
                 images in a batch.
         """
+        # if not isinstance(imgs, list):
+        #     imgs = [imgs]
+        # if not isinstance(img_metas, list):
+        #     img_metas = [img_metas]
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
@@ -440,28 +490,36 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
         outputs = dict(
             loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
         # if self.da_head is not None:
-        #     if self.iiter in self.num:
-        #         self.da_head.GradCAM = True
-        #         for idx in range(2):
-        #             print(data['img_metas'][idx]['filename'] + " da_head Visaulizing...")
-        #             Grad_CamDA(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.da_head.conv3, self.iiter)
-        #         self.da_head.GradCAM = False
+        #     self.da_head.GradCAM = True
+        #     for idx in range(1):
+        #         print(data['img_metas'][idx]['filename'] + "da_head Visaulizing...")
+        #         Grad_CamDA(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.da_head.conv3, self.iiter)
+        #     self.da_head.GradCAM = False
 
         # if self.iiter in self.num:
-        #     self.rpn_head.GradCAM = True
-        #     for idx in range(2):
-        #         print(data['img_metas'][idx]['filename'] + " rpn_head Visaulizing...")
-        #         Grad_CamRPN(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.rpn_head.rpn_cls, self.iiter)
-        #     self.rpn_head.GradCAM = False
+        # self.rpn_head.GradCAM = True
+        # for idx in range(1):
+        #     print(data['img_metas'][idx]['filename'] + " rpn_head Visaulizing...")
+        #     Grad_CamRPN(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.rpn_head.rpn_conv, self.iiter)
+        # self.rpn_head.GradCAM = False
 
         # self.roi_head.GradCAM = True
-        # for idx in range(2):
-        #     Grad_CamROI(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.roi_head[0].bbox_head.fc_cls)
+        # for idx in range(1):
+        #     print(data['img_metas'][idx]['filename'] + "query_head.transformer.encoder.layers.3.adapter Visaulizing...")
+        #     Grad_CamAdapter(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.query_head.transformer.encoder.layers[4].adapter[0], self.iiter)
+        # self.roi_head.GradCAM = False
+       
+
+        # if self.iiter in self.num:
+        # self.roi_head.GradCAM = True
+        # for idx in range(1):
+        #     print(data['img_metas'][idx]['filename'] + " roi_head Visaulizing...")
+        #     Grad_CamROI(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.roi_head[0].bbox_head.fc_cls, self.iiter)
         # self.roi_head.GradCAM = False
 
         # if self.iiter in self.num:
         #     self.bbox_head.GradCAM = True
-        #     for idx in range(2):
+        #     for idx in range(1):
         #         print(data['img_metas'][idx]['filename'] + " bbox_head Visaulizing...")
         #         Grad_CamBBOX(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.bbox_head[0].cls_convs[0].conv, self.iiter)
         #     self.bbox_head.GradCAM = False
