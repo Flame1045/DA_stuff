@@ -332,7 +332,7 @@ model = dict(
                         dropout=0.0),
                     feedforward_channels=2048,
                     ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
+                    operation_order=('self_attn', 'norm', 'ffn', 'adapter', 'norm'))),
             decoder=dict(
                 type='CoDeformableDetrTransformerDecoder',
                 num_layers=6,
@@ -354,7 +354,7 @@ model = dict(
                     feedforward_channels=2048,
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'adapter', 'norm')))),
+                                     'ffn', 'norm')))),
         positional_encoding=dict(
             type='SinePositionalEncoding',
             num_feats=128,
@@ -396,10 +396,9 @@ model = dict(
                     loss_weight=1.2),
                 loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
     ],
-
     da_head=dict(
         type='DAHead',
-        useCTB=True,
+        useCTB=False,
         loss=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,
@@ -487,7 +486,7 @@ optimizer = dict(
             sampling_offsets=dict(lr_mult=0.1),
             reference_points=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
-lr_config = dict(policy='step', step=[200])
+lr_config = dict(policy='step', step=[2000])
 # lr_config = dict(
 #     policy='CosineAnnealing',
 #     warmup='linear',

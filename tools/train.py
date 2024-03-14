@@ -40,6 +40,11 @@ def parse_args():
         action='store_true',
         help='da_head')
     parser.add_argument(
+        '--pseudo_label_flag', 
+        action='store_true',
+        default=False,
+        help='da_head')
+    parser.add_argument(
         '--grad_cam', 
         action='store_true',
         help='grad_cam')
@@ -179,6 +184,8 @@ def main():
         cfg.da_head = args.da_head
     if args.grad_cam is not None:
         cfg.grad_cam = args.grad_cam
+    if args.pseudo_label_flag is not None:
+        cfg.pseudo_label_flag = args.pseudo_label_flag
     cfg.auto_resume = args.auto_resume
     if args.gpus is not None:
         cfg.gpu_ids = range(1)
@@ -260,6 +267,8 @@ def main():
     # add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
 
+    model.pseudo_label_flag = cfg.pseudo_label_flag
+
 
     if cfg.adapter:
         trainable_layers = cfg.adapter_choose
@@ -287,9 +296,9 @@ def main():
         for name, param in model.named_parameters():
             param.requires_grad = True
             logger.info(f"{name}, _is_trained:{param.requires_grad}")
-    else:
-        for name, param in model.named_parameters():
-            logger.info(f"{name}, _is_trained:{param.requires_grad}")
+    # else:
+    #     for name, param in model.named_parameters():
+    #         logger.info(f"{name}, _is_trained:{param.requires_grad}")
 
     # if True:
     #     Grad_Cam(model, )

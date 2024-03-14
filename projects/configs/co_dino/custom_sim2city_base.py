@@ -2,65 +2,22 @@ import math
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 classes = ('car',)
-eval_peroid = 100
-saving_peroid = 100
-epochs = 1
-batch_size = 1
+epochs = 10
+batch_size = 2
 numbers_of_images = 12975
 total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
+eval_peroid = int(total_iters / epochs)
+saving_peroid = int(total_iters / epochs)
 
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
+    samples_per_gpu=batch_size,
+    workers_per_gpu=batch_size,
+    persistent_workers=True,
     train=dict(
             type='MultiImageMixDataset',
-            ann_file='data/coco/sim10k_train.json',
-            img_prefix='data/coco/JPEGImages/',
+            ann_file='data/coco/Sim2Real_source/sim10k_train.json',
+            img_prefix='data/coco/Sim2Real_source/JPEGImages/',
             pipeline=[
-            # dict(type='LoadImageFromFile'),
-            # dict(type='LoadAnnotations', with_bbox=True),
-            # dict(type='RandomFlip', flip_ratio=0.5),
-            # dict(
-            #     type='AutoAugment',
-            #     policies=[[{
-            #         'type':
-            #         'Resize',
-            #         'img_scale': [(480, 1333), (512, 1333), (544, 1333),
-            #                       (576, 1333), (608, 1333), (640, 1333),
-            #                       (672, 1333), (704, 1333), (736, 1333),
-            #                       (768, 1333), (800, 1333)],
-            #         'multiscale_mode':
-            #         'value',
-            #         'keep_ratio':
-            #         True
-            #     }],
-            #               [{
-            #                   'type': 'Resize',
-            #                   'img_scale': [(400, 4200), (500, 4200),
-            #                                 (600, 4200)],
-            #                   'multiscale_mode': 'value',
-            #                   'keep_ratio': True
-            #               }, {
-            #                   'type': 'RandomCrop',
-            #                   'crop_type': 'absolute_range',
-            #                   'crop_size': (384, 600),
-            #                   'allow_negative_crop': True
-            #               }, {
-            #                   'type':
-            #                   'Resize',
-            #                   'img_scale': [(480, 1333), (512, 1333),
-            #                                 (544, 1333), (576, 1333),
-            #                                 (608, 1333), (640, 1333),
-            #                                 (672, 1333), (704, 1333),
-            #                                 (736, 1333), (768, 1333),
-            #                                 (800, 1333)],
-            #                   'multiscale_mode':
-            #                   'value',
-            #                   'override':
-            #                   True,
-            #                   'keep_ratio':
-            #                   True
-            #               }]]),
                 dict(
                     type='Normalize',
                     mean=[123.675, 116.28, 103.53],
@@ -75,8 +32,8 @@ data = dict(
             filter_empty_gt=False,
             dataset=dict(
                 type=dataset_type,
-                ann_file='data/coco/sim10k_train.json',
-                img_prefix='data/coco/JPEGImages/',
+                ann_file='data/coco/Sim2Real_source/sim10k_train.json',
+                img_prefix='data/coco/Sim2Real_source/JPEGImages/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -103,8 +60,8 @@ data = dict(
         ])),     
     val=dict(
         type=dataset_type,
-        ann_file='data/coco/annotations/instances_val2017.json',
-        img_prefix='data/coco/val2017/',
+        ann_file='data/coco/Sim2Real_target/annotations/instances_val2017.json',
+        img_prefix='data/coco/Sim2Real_target/val2017/',
         classes=classes,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -132,8 +89,8 @@ data = dict(
         ]),
     test=dict(
         type=dataset_type,
-        ann_file='data/coco/annotations/instances_val2017.json',
-        img_prefix='data/coco/val2017/',
+        ann_file='data/coco/Sim2Real_target/annotations/instances_val2017.json',
+        img_prefix='data/coco/Sim2Real_target/val2017/',
         classes=classes,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -161,11 +118,11 @@ data = dict(
         ]))
 evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True) #
 checkpoint_config = dict(interval=saving_peroid, by_epoch=False) #
-log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
+log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = 'pretrained/co_deformable_detr_r50_1x_coco.pth'
+load_from = None
 resume_from = None
 workflow = [('train', eval_peroid)] #
 opencv_num_threads = 0
@@ -297,33 +254,7 @@ model = dict(
                     loss_weight=12.0),
                 loss_bbox=dict(type='GIoULoss', loss_weight=120.0)))
     ],
-    # bbox_head=[
-    #     dict(
-    #         type='CoATSSHead',
-    #         num_classes=1,
-    #         in_channels=256,
-    #         stacked_convs=1,
-    #         feat_channels=256,
-    #         anchor_generator=dict(
-    #             type='AnchorGenerator',
-    #             ratios=[1.0],
-    #             octave_base_scale=8,
-    #             scales_per_octave=1,
-    #             strides=[8, 16, 32, 64, 128]),
-    #         bbox_coder=dict(
-    #             type='DeltaXYWHBBoxCoder',
-    #             target_means=[0.0, 0.0, 0.0, 0.0],
-    #             target_stds=[0.1, 0.1, 0.2, 0.2]),
-    #         loss_cls=dict(
-    #             type='FocalLoss',
-    #             use_sigmoid=True,
-    #             gamma=2.0,
-    #             alpha=0.25,
-    #             loss_weight=12.0),
-    #         loss_bbox=dict(type='GIoULoss', loss_weight=24.0),
-    #         loss_centerness=dict(
-    #             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=12.0))
-    # ],
+
     train_cfg=[
         dict(
             assigner=dict(

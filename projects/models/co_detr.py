@@ -8,6 +8,19 @@ from mmdet.models.builder import DETECTORS, build_backbone, build_head, build_ne
 from mmdet.models.detectors.base import BaseDetector
 from mmdet.utils import get_root_logger
 
+def add_dicts(dicts):
+    result = {}
+    for d in dicts:
+        for key, value in d.items():
+            if isinstance(value, list):
+                if key not in result:
+                    result[key] = value.copy()  # Create a copy to avoid modifying the original list
+                else:
+                    result[key] = [result[key][i] + value[i] for i in range(min(len(result[key]), len(value)))]
+            else:
+                result[key] = result.get(key, 0) + value
+    return result
+
 class SpatialWiseFusion(nn.Module):
     def __init__(self, input_channels):
         super(SpatialWiseFusion, self).__init__()
@@ -113,7 +126,6 @@ class ScaleAggregationFusion(nn.Module):
 
         return mul_feature, scale_weights
 
-
 @DETECTORS.register_module()
 class CoDETR(BaseDetector):
     def __init__(self,
@@ -189,9 +201,11 @@ class CoDETR(BaseDetector):
         self.bbox_head.GradCAM = False
         self.rpn_head.GradCAM = False
         self.roi_head.GradCAM = False
-        self.spatial_fusion_module = SpatialWiseFusion(input_channels=256//2).to("cuda:0")
-        self.global_fusion_module = ChannelWiseFusion(input_channels=256//2).to("cuda:0")
-        self.saf_module = ScaleAggregationFusion(input_channels=256, num_scales=5).to("cuda:0")
+        if self.da_head is not None:
+            if self.da_head.useCTB:
+                self.spatial_fusion_module = SpatialWiseFusion(input_channels=256//2).to("cuda:0")
+                self.global_fusion_module = ChannelWiseFusion(input_channels=256//2).to("cuda:0")
+                self.saf_module = ScaleAggregationFusion(input_channels=256, num_scales=5).to("cuda:0")
 
     @property
     def with_rpn(self):
@@ -272,292 +286,312 @@ class CoDETR(BaseDetector):
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-        if self.da_head is not None:
-            self.da_head.acc = True
+        img_ = img
+        img_metas_ = img_metas
+        gt_bboxes_ = gt_bboxes
+        gt_labels_ = gt_labels
 
-        batch_input_shape = tuple(img[0].size()[-2:])
-        for img_meta in img_metas:
-            img_meta['batch_input_shape'] = batch_input_shape
+        ret_losses = []
 
-        if not self.with_attn_mask: # remove attn mask for LSJ
-            for i in range(len(img_metas)):
-                input_img_h, input_img_w = img_metas[i]['batch_input_shape']
-                img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
+        for i in range(0,len(img_)):
+            losses = dict()
+            img_metas = [img_metas_[i]]
+            img = img_[i].view(1, img_.shape[1], img_.shape[2], img_.shape[3])
+            gt_bboxes = [gt_bboxes_[i]]
+            gt_labels = [gt_labels_[i]]
 
-        x = self.extract_feat(img, img_metas)
-        CNN_feat = list(x)
+            if self.da_head is not None:
+                self.da_head.acc = True
 
-        losses = dict()
-        def upd_loss(losses, idx, weight=1):
-            new_losses = dict()
-            for k,v in losses.items():
-                new_k = '{}{}'.format(k,idx)
-                if isinstance(v,list) or isinstance(v,tuple):
-                    new_losses[new_k] = [i*weight for i in v]
-                else:new_losses[new_k] = v*weight
-            return new_losses
-        # gt_bboxes_ignore = []
-        Pseudo_label_flag = True
-        gt_bboxes_ignore_Flag = False
-        for b, img_meta in enumerate(img_metas): #
-            if "leftImg8bit" in img_meta["filename"]:
-                gt_bboxes_ignore_Flag = True
-                # print("gt_bboxes_ignore:",gt_bboxes_ignore)
-            else:
-                gt_bboxes_ignore_Flag = False
+            batch_input_shape = tuple(img[0].size()[-2:])
+            for img_meta in img_metas:
+                img_meta['batch_input_shape'] = batch_input_shape
 
-        # if img_metas[0]["ori_filename"][-4:] != img_metas[1]["ori_filename"][-4:]:
-        #     assert print("~~~~~~~~",img_metas[0]["ori_filename"], img_metas[1]["ori_filename"])
-        # DETR encoder and decoder forward
+            if not self.with_attn_mask: # remove attn mask for LSJ
+                for i in range(len(img_metas)):
+                    input_img_h, input_img_w = img_metas[i]['batch_input_shape']
+                    img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
 
-        if Pseudo_label_flag and gt_bboxes_ignore_Flag:
-            dir = "/home/ee4012/Eric/new/Vary-toy/Vary-master/filter_GT/"
-            gt_bboxes = []
-            gt_labels = []
-            for img_m in img_metas:
-                filename = img_m['filename'].split('/')[-1].replace('.png','.txt')
-                filename = dir + filename
-                with open(filename, "r") as file:
-                    lines = file.readlines()
-                # Extract values after the word "car" from each line
-                pgtbbox = []
-                pgtlable = []
-                for line in lines:
-                    if "car" in line:
-                        pgtbbox.append(list(map(float, line.strip().split()[1:])))
-                        pgtlable.extend([0])
-                # Convert the list of values to a tensor with size [2, 4]
-                pgtbbox = torch.tensor(pgtbbox).to("cuda:0")
-                gt_bboxes.append(pgtbbox)
-                pgtlable = torch.tensor(pgtlable).to("cuda:0")
-                gt_labels.append(pgtlable)
-                if not pgtlable.numel()==0:
+            x = self.extract_feat(img, img_metas)
+            CNN_feat = list(x)
+
+            def upd_loss(losses, idx, weight=1):
+                new_losses = dict()
+                for k,v in losses.items():
+                    new_k = '{}{}'.format(k,idx)
+                    if isinstance(v,list) or isinstance(v,tuple):
+                        new_losses[new_k] = [i*weight for i in v]
+                    else:new_losses[new_k] = v*weight
+                return new_losses
+            # gt_bboxes_ignore = []
+            Pseudo_label_flag = self.pseudo_label_flag
+            gt_bboxes_ignore_Flag = False
+            for b, img_meta in enumerate(img_metas): #
+                if "_target" in img_meta["filename"]:
+                    gt_bboxes_ignore_Flag = True
+                    # print("gt_bboxes_ignore:",gt_bboxes_ignore)
+                else:
                     gt_bboxes_ignore_Flag = False
 
-        #         print("filename:", filename)
-        # print("gt_bboxes:", gt_bboxes)
-        # print("gt_labels:", gt_labels)
-        
-        if self.with_query_head:
-            bbox_losses, x = self.query_head.forward_train(x, img_metas, gt_bboxes,
-                                                           gt_labels, gt_bboxes_ignore)
-            if gt_bboxes_ignore_Flag:
-                _ = bbox_losses
+            # if img_metas[0]["ori_filename"][-4:] != img_metas[1]["ori_filename"][-4:]:
+            #     assert print("~~~~~~~~",img_metas[0]["ori_filename"], img_metas[1]["ori_filename"])
+            # DETR encoder and decoder forward
+
+            if Pseudo_label_flag and gt_bboxes_ignore_Flag:
+                dir = "/home/ee4012/Eric/new/Vary-toy/Vary-master/filter_GT/"
+                gt_bboxes = []
+                gt_labels = []
+                for img_m in img_metas:
+                    filename = img_m['filename'].split('/')[-1].replace('.png','.txt')
+                    filename = dir + filename
+                    with open(filename, "r") as file:
+                        lines = file.readlines()
+                    # Extract values after the word "car" from each line
+                    pgtbbox = []
+                    pgtlable = []
+                    for line in lines:
+                        if "car" in line:
+                            pgtbbox.append(list(map(float, line.strip().split()[1:])))
+                            pgtlable.extend([0])
+                    # Convert the list of values to a tensor with size [2, 4]
+                    pgtbbox = torch.tensor(pgtbbox).to("cuda:0")
+                    gt_bboxes.append(pgtbbox)
+                    pgtlable = torch.tensor(pgtlable).to("cuda:0")
+                    gt_labels.append(pgtlable)
+                    if not pgtlable.numel()==0:
+                        gt_bboxes_ignore_Flag = False
+
+            #         print("filename:", filename)
+            # print("gt_bboxes:", gt_bboxes)
+            # print("gt_labels:", gt_labels)
+            
+            if self.with_query_head:
+                bbox_losses, x = self.query_head.forward_train(x, img_metas, gt_bboxes,
+                                                            gt_labels, gt_bboxes_ignore)
+                if gt_bboxes_ignore_Flag:
+                    _ = bbox_losses
+                else:
+                    losses.update(bbox_losses)
+                TRNSF_feat = x
+            if self.da_head is not None:
+                if self.da_head.useCTB:
+                    # CT Blender
+                    # Split-Merge Fusion
+                    # Initialize lists to store cnn_chunks
+                    concatenated_hierarchical = []
+                    for i in range(0,4):
+                        Trn = TRNSF_feat[i]
+                        Cnn = CNN_feat[i]
+
+                        num_chunks = 2
+                        # Check if the input_tensor can be evenly split
+                        assert Trn.size(1) % num_chunks == 0, f"Cannot evenly split tensor along dimension 1 into {num_chunks} chunks."
+                        Trn_chunks = torch.chunk(Trn, num_chunks, dim=1) # T split channels (K groups)
+                        # Check if the input_tensor can be evenly split
+                        assert Cnn.size(1) % num_chunks == 0, f"Cannot evenly split tensor along dimension 1 into {num_chunks} chunks."
+                        Cnn_chunks = torch.chunk(Cnn, num_chunks, dim=1) # C split channels (K groups)
+
+                        # Initialize lists to store cnn_chunks
+                        concatenated_cnn_chunks = []
+                        for j in range(0,num_chunks):
+                            # each layer of C and T
+                            trn_chunks = Trn_chunks[j].to("cuda:0")
+                            cnn_chunks = Cnn_chunks[j].to("cuda:0")
+
+                            # spatial(5)
+                            self.spatial_output_tensor = self.spatial_fusion_module(trn_chunks)
+
+                            # global(6)
+                            self.global_output_tensor = self.global_fusion_module(trn_chunks)
+                        
+                            # re-weight by (5) and (6)
+                            cnn_chunks = cnn_chunks * self.spatial_output_tensor
+                            cnn_chunks = cnn_chunks * self.global_output_tensor
+
+                            # shuffle K times
+
+
+                            # Append the re-weighted cnn_chunks to the list
+                            concatenated_cnn_chunks.append(cnn_chunks)
+
+                        # Concatenate the cnn_chunks outside the loop
+                        concatenated_cnn_chunks = torch.cat(concatenated_cnn_chunks, dim=1)
+                        concatenated_hierarchical.append(concatenated_cnn_chunks)
+
+                    # Forward pass
+                    fused_feature, scale_weights = self.saf_module(concatenated_hierarchical)
+                        
+                    in_da_feat = fused_feature  
+
+                else:
+                    in_da_feat = TRNSF_feat[:-1] # 0 ~ 3 layer
+
+            if self.da_head is not None:
+                if self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
+                    if self.da_head is not None:
+                        acc, da_loss = self.da_head(in_da_feat, img_metas)
+                        da_loss = upd_loss(da_loss, idx=0)
+                        losses.update(da_loss)
+                        if acc is not None:
+                            self.logger_n.info(f"acc: {acc}")
+                            self.logger_n.info(f"acc: {acc}")
+                            self.logger_n.info(f"acc: {acc}")
+                        # return losses
+
+            # RPN forward and loss
+            if self.with_rpn and not gt_bboxes_ignore_Flag:
+                proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
+                                                self.test_cfg[self.head_idx].rpn)
+                rpn_losses, proposal_list = self.rpn_head.forward_train(
+                    x,
+                    img_metas,
+                    gt_bboxes,
+                    gt_labels=None,
+                    gt_bboxes_ignore=gt_bboxes_ignore,
+                    proposal_cfg=proposal_cfg,
+                    **kwargs)
+                losses.update(rpn_losses)
             else:
-                losses.update(bbox_losses)
-            TRNSF_feat = x
+                proposal_list = proposals
 
-        if self.da_head is not None:
-            # CT Blender
-            # Split-Merge Fusion
-            # Initialize lists to store cnn_chunks
-            concatenated_hierarchical = []
-            for i in range(0,4):
-                Trn = TRNSF_feat[i]
-                Cnn = CNN_feat[i]
+            if not gt_bboxes_ignore_Flag:
+                positive_coords = []
+                for i in range(len(self.roi_head)):
+                    roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+                                                            gt_bboxes, gt_labels,
+                                                            gt_bboxes_ignore, gt_masks,
+                                                            **kwargs)
+                    if self.with_pos_coord:
+                        positive_coords.append(roi_losses.pop('pos_coords'))
+                    else: 
+                        if 'pos_coords' in roi_losses.keys():
+                            tmp = roi_losses.pop('pos_coords')     
+                    roi_losses = upd_loss(roi_losses, idx=i)
+                    losses.update(roi_losses)
+                    
+                for i in range(len(self.bbox_head)):
+                    bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
+                                                                gt_labels, gt_bboxes_ignore)
+                    if self.with_pos_coord:
+                        pos_coords = bbox_losses.pop('pos_coords')
+                        positive_coords.append(pos_coords)
+                    else:
+                        if 'pos_coords' in bbox_losses.keys():
+                            tmp = bbox_losses.pop('pos_coords')          
+                    bbox_losses = upd_loss(bbox_losses, idx=i+len(self.roi_head))
+                    losses.update(bbox_losses)
 
-                num_chunks = 2
-                # Check if the input_tensor can be evenly split
-                assert Trn.size(1) % num_chunks == 0, f"Cannot evenly split tensor along dimension 1 into {num_chunks} chunks."
-                Trn_chunks = torch.chunk(Trn, num_chunks, dim=1) # T split channels (K groups)
-                # Check if the input_tensor can be evenly split
-                assert Cnn.size(1) % num_chunks == 0, f"Cannot evenly split tensor along dimension 1 into {num_chunks} chunks."
-                Cnn_chunks = torch.chunk(Cnn, num_chunks, dim=1) # C split channels (K groups)
-
-                # Initialize lists to store cnn_chunks
-                concatenated_cnn_chunks = []
-                for j in range(0,num_chunks):
-                    # each layer of C and T
-                    trn_chunks = Trn_chunks[j].to("cuda:0")
-                    cnn_chunks = Cnn_chunks[j].to("cuda:0")
-
-                    # spatial(5)
-                    self.spatial_output_tensor = self.spatial_fusion_module(trn_chunks)
-
-                    # global(6)
-                    self.global_output_tensor = self.global_fusion_module(trn_chunks)
+                if self.with_pos_coord and len(positive_coords)>0:
+                    for i in range(len(positive_coords)):
+                        bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
+                                                                    gt_labels, gt_bboxes_ignore, positive_coords[i], i)
+                        bbox_losses = upd_loss(bbox_losses, idx=i)
+                        losses.update(bbox_losses)  
                 
-                    # re-weight by (5) and (6)
-                    cnn_chunks = cnn_chunks * self.spatial_output_tensor
-                    cnn_chunks = cnn_chunks * self.global_output_tensor
+                query_list = self.simple_test_query_head(img, img_metas)           
 
-                    # shuffle K times
-
-
-                    # Append the re-weighted cnn_chunks to the list
-                    concatenated_cnn_chunks.append(cnn_chunks)
-
-                # Concatenate the cnn_chunks outside the loop
-                concatenated_cnn_chunks = torch.cat(concatenated_cnn_chunks, dim=1)
-                concatenated_hierarchical.append(concatenated_cnn_chunks)
-
-            # Forward pass
-            fused_feature, scale_weights = self.saf_module(concatenated_hierarchical)
+            if self.bbox_head.GradCAM or self.rpn_head.GradCAM or self.roi_head.GradCAM and gt_bboxes_ignore_Flag:
+                proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
+                                                self.test_cfg[self.head_idx].rpn)
+                rpn_losses, proposal_list = self.rpn_head.forward_train(
+                    x,
+                    img_metas,
+                    gt_bboxes,
+                    gt_labels=None,
+                    gt_bboxes_ignore=gt_bboxes_ignore,
+                    proposal_cfg=proposal_cfg,
+                    **kwargs)
                 
-            in_da_feat = fused_feature  
+                positive_coords = []
+                for i in range(len(self.roi_head)):
+                    roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+                                                            gt_bboxes, gt_labels,
+                                                            gt_bboxes_ignore, gt_masks,
+                                                            **kwargs)
+                    if self.with_pos_coord:
+                        positive_coords.append(roi_losses.pop('pos_coords'))
+                    else: 
+                        if 'pos_coords' in roi_losses.keys():
+                            tmp = roi_losses.pop('pos_coords')     
+                    roi_losses = upd_loss(roi_losses, idx=i)
+                    losses.update(roi_losses)
+                    
+                for i in range(len(self.bbox_head)):
+                    bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
+                                                                gt_labels, gt_bboxes_ignore)
+                    if self.with_pos_coord:
+                        pos_coords = bbox_losses.pop('pos_coords')
+                        positive_coords.append(pos_coords)
+                    else:
+                        if 'pos_coords' in bbox_losses.keys():
+                            tmp = bbox_losses.pop('pos_coords')          
+                    bbox_losses = upd_loss(bbox_losses, idx=i+len(self.roi_head))
+                    losses.update(bbox_losses)
 
-            if self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
-                if self.da_head is not None:
-                    acc, da_loss = self.da_head(in_da_feat, img_metas)
-                    da_loss = upd_loss(da_loss, idx=0)
-                    losses.update(da_loss)
-                    if acc is not None:
-                        self.logger_n.info(f"acc: {acc}")
-                        self.logger_n.info(f"acc: {acc}")
-                        self.logger_n.info(f"acc: {acc}")
-                    # return losses
+                if self.with_pos_coord and len(positive_coords)>0:
+                    for i in range(len(positive_coords)):
+                        bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
+                                                                    gt_labels, gt_bboxes_ignore, positive_coords[i], i)
+                        bbox_losses = upd_loss(bbox_losses, idx=i)
+                        losses.update(bbox_losses)  
 
-        # RPN forward and loss
-        if self.with_rpn and not gt_bboxes_ignore_Flag:
-            proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
-                                              self.test_cfg[self.head_idx].rpn)
-            rpn_losses, proposal_list = self.rpn_head.forward_train(
-                x,
-                img_metas,
-                gt_bboxes,
-                gt_labels=None,
-                gt_bboxes_ignore=gt_bboxes_ignore,
-                proposal_cfg=proposal_cfg,
-                **kwargs)
-            losses.update(rpn_losses)
-        else:
-            proposal_list = proposals
+                query_list = self.simple_test_query_head(img, img_metas)
 
-        if not gt_bboxes_ignore_Flag:
-            positive_coords = []
-            for i in range(len(self.roi_head)):
-                roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
-                                                        gt_bboxes, gt_labels,
-                                                        gt_bboxes_ignore, gt_masks,
-                                                        **kwargs)
-                if self.with_pos_coord:
-                    positive_coords.append(roi_losses.pop('pos_coords'))
-                else: 
-                    if 'pos_coords' in roi_losses.keys():
-                        tmp = roi_losses.pop('pos_coords')     
-                roi_losses = upd_loss(roi_losses, idx=i)
-                losses.update(roi_losses)
-                
-            for i in range(len(self.bbox_head)):
-                bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
-                                                            gt_labels, gt_bboxes_ignore)
-                if self.with_pos_coord:
-                    pos_coords = bbox_losses.pop('pos_coords')
-                    positive_coords.append(pos_coords)
-                else:
-                    if 'pos_coords' in bbox_losses.keys():
-                        tmp = bbox_losses.pop('pos_coords')          
-                bbox_losses = upd_loss(bbox_losses, idx=i+len(self.roi_head))
-                losses.update(bbox_losses)
+            if self.da_head is not None and self.da_head.GradCAM == True:
 
-            if self.with_pos_coord and len(positive_coords)>0:
-                for i in range(len(positive_coords)):
-                    bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
-                                                                gt_labels, gt_bboxes_ignore, positive_coords[i], i)
-                    bbox_losses = upd_loss(bbox_losses, idx=i)
-                    losses.update(bbox_losses)  
+                da_loss = self.da_head(in_da_feat, img_metas)
+                return da_loss
 
-            query_list = self.simple_test_query_head(img, img_metas)           
+            if self.rpn_head.GradCAM == True:
 
-        if self.bbox_head.GradCAM or self.rpn_head.GradCAM or self.roi_head.GradCAM and gt_bboxes_ignore_Flag:
-            proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
-                                              self.test_cfg[self.head_idx].rpn)
-            rpn_losses, proposal_list = self.rpn_head.forward_train(
-                x,
-                img_metas,
-                gt_bboxes,
-                gt_labels=None,
-                gt_bboxes_ignore=gt_bboxes_ignore,
-                proposal_cfg=proposal_cfg,
-                **kwargs)
+                rpn_loss = self.rpn_head.forward_train(
+                    x,
+                    img_metas,
+                    gt_bboxes,
+                    gt_labels=None,
+                    gt_bboxes_ignore=gt_bboxes_ignore,
+                    proposal_cfg=proposal_cfg,
+                    **kwargs)
+                return rpn_loss[0]['loss_rpn_cls']
             
-            positive_coords = []
-            for i in range(len(self.roi_head)):
-                roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
-                                                        gt_bboxes, gt_labels,
-                                                        gt_bboxes_ignore, gt_masks,
-                                                        **kwargs)
-                if self.with_pos_coord:
-                    positive_coords.append(roi_losses.pop('pos_coords'))
-                else: 
-                    if 'pos_coords' in roi_losses.keys():
-                        tmp = roi_losses.pop('pos_coords')     
-                roi_losses = upd_loss(roi_losses, idx=i)
-                losses.update(roi_losses)
+            if self.roi_head.GradCAM == True:
                 
-            for i in range(len(self.bbox_head)):
-                bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
-                                                            gt_labels, gt_bboxes_ignore)
-                if self.with_pos_coord:
-                    pos_coords = bbox_losses.pop('pos_coords')
-                    positive_coords.append(pos_coords)
-                else:
-                    if 'pos_coords' in bbox_losses.keys():
-                        tmp = bbox_losses.pop('pos_coords')          
-                bbox_losses = upd_loss(bbox_losses, idx=i+len(self.roi_head))
-                losses.update(bbox_losses)
-
-            if self.with_pos_coord and len(positive_coords)>0:
-                for i in range(len(positive_coords)):
-                    bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
-                                                                gt_labels, gt_bboxes_ignore, positive_coords[i], i)
-                    bbox_losses = upd_loss(bbox_losses, idx=i)
-                    losses.update(bbox_losses)  
-
-            query_list = self.simple_test_query_head(img, img_metas)
-
-        if self.da_head is not None and self.da_head.GradCAM == True:
-
-            da_loss = self.da_head(in_da_feat, img_metas)
-            return da_loss
-
-        if self.rpn_head.GradCAM == True:
-
-            rpn_loss = self.rpn_head.forward_train(
-                x,
-                img_metas,
-                gt_bboxes,
-                gt_labels=None,
-                gt_bboxes_ignore=gt_bboxes_ignore,
-                proposal_cfg=proposal_cfg,
-                **kwargs)
-            return rpn_loss[0]['loss_rpn_cls']
-        
-        if self.roi_head.GradCAM == True:
+                for i in range(len(self.roi_head)):
+                    roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+                                                            gt_bboxes, gt_labels,
+                                                            gt_bboxes_ignore, gt_masks,
+                                                            **kwargs)
+                    if self.with_pos_coord:
+                        positive_coords.append(roi_losses.pop('pos_coords'))
+                    else: 
+                        if 'pos_coords' in roi_losses.keys():
+                            tmp = roi_losses.pop('pos_coords')   
+                    total_loss_tensor = torch.tensor([0.], device='cuda:0')  
+                    for key, value in losses.items():
+                        if 'd4.loss_bbox' in key:
+                            if isinstance(value, list):
+                                value = sum(value)  # Convert scalar tensor to 1-dimensional tensor
+                            total_loss_tensor += value
+                    # print(losses)
+                    # print(total_loss_tensor)
+                    # print("losses[loss_bbox0]",losses["loss_bbox0"])
+                    return total_loss_tensor
+                
+            if self.bbox_head.GradCAM == True:
+                for i in range(len(self.bbox_head)):
+                    bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
+                                                                gt_labels, gt_bboxes_ignore)
+                    if self.with_pos_coord:
+                        pos_coords = bbox_losses.pop('pos_coords')
+                        positive_coords.append(pos_coords)
+                    else:
+                        if 'pos_coords' in bbox_losses.keys():
+                            tmp = bbox_losses.pop('pos_coords')          
+                    return bbox_losses['loss_cls']
             
-            for i in range(len(self.roi_head)):
-                roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
-                                                        gt_bboxes, gt_labels,
-                                                        gt_bboxes_ignore, gt_masks,
-                                                        **kwargs)
-                if self.with_pos_coord:
-                    positive_coords.append(roi_losses.pop('pos_coords'))
-                else: 
-                    if 'pos_coords' in roi_losses.keys():
-                        tmp = roi_losses.pop('pos_coords')   
-                total_loss_tensor = torch.tensor([0.], device='cuda:0')  
-                for key, value in losses.items():
-                    if 'd4.loss_bbox' in key:
-                        if isinstance(value, list):
-                            value = sum(value)  # Convert scalar tensor to 1-dimensional tensor
-                        total_loss_tensor += value
-                # print(losses)
-                # print(total_loss_tensor)
-                # print("losses[loss_bbox0]",losses["loss_bbox0"])
-                return total_loss_tensor
+            ret_losses.append(losses)
             
-        if self.bbox_head.GradCAM == True:
-            for i in range(len(self.bbox_head)):
-                bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
-                                                            gt_labels, gt_bboxes_ignore)
-                if self.with_pos_coord:
-                    pos_coords = bbox_losses.pop('pos_coords')
-                    positive_coords.append(pos_coords)
-                else:
-                    if 'pos_coords' in bbox_losses.keys():
-                        tmp = bbox_losses.pop('pos_coords')          
-                return bbox_losses['loss_cls']
-
+        losses = add_dicts(ret_losses)
         return losses
 
 

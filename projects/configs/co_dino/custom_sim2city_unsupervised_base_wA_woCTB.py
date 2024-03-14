@@ -399,7 +399,7 @@ model = dict(
 
     da_head=dict(
         type='DAHead',
-        useCTB=True,
+        useCTB=False,
         loss=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,

@@ -51,7 +51,7 @@ class lamda_scheduler():
 
 @HEADS.register_module()
 class DAHead(BaseModule):
-    def __init__(self,loss):
+    def __init__(self,useCTB=False,loss=None):
         super(DAHead, self).__init__()
         self.conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1,
                   padding=0, bias=True)
@@ -78,6 +78,7 @@ class DAHead(BaseModule):
         self.acc = False
         self.Alpha = torch.tensor(1.0, requires_grad=False)
         self.loss_fn = nn.BCEWithLogitsLoss()
+        self.useCTB = useCTB
     
     def forward(self, in_da_feat, img_metas):
         
@@ -118,7 +119,7 @@ class DAHead(BaseModule):
             x = self.fc(x)
             # x = self.cls_logits(x)
             if img_metas[i]['filename'] is not None:
-                if 'data/coco/train2017/' in img_metas[i]['filename']:
+                if '_target' in img_metas[i]['filename']:
                     label = torch.full(x.shape, 1, dtype=torch.float, device=x.device)  
                 else:
                     label = torch.full(x.shape, 0, dtype=torch.float, device=x.device) 
@@ -128,6 +129,8 @@ class DAHead(BaseModule):
                 else:
                     label = torch.full(x.shape, 0, dtype=torch.float, device=x.device) 
             loss_ret = loss_ret + self.loss_fn(x, label) 
+
+            # print("prob", F.sigmoid(x))
         loss_ret = loss_ret / len(in_da_feat_)
 
         ret =  {'da_loss': loss_ret}
@@ -141,6 +144,7 @@ class DAHead(BaseModule):
             #         self.count = self.count + 1.0
             prob = F.sigmoid(x)
             self.total = self.total + 1
+            # print(torch.mean(torch.abs(torch.sub(prob, label))))
             if torch.mean(torch.abs(torch.sub(prob, label))) < 0.2:
                 self.count = self.count + 1.0
             if self.total == 10:

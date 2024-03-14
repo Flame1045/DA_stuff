@@ -325,7 +325,7 @@ model = dict(
                 type='DetrTransformerEncoder', 
                 num_layers=6,
                 transformerlayers=dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -339,7 +339,7 @@ model = dict(
                 return_intermediate=True,
                 look_forward_twice=True,
                 transformerlayers=dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', ######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -354,7 +354,7 @@ model = dict(
                     feedforward_channels=2048,
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'adapter', 'norm')))),
+                                     'ffn', 'norm')))),
         positional_encoding=dict(
             type='SinePositionalEncoding',
             num_feats=128,

@@ -34,11 +34,7 @@ except ImportError:
                   '``mmcv.ops.multi_scale_deform_attn``, '
                   'You should install ``mmcv-full`` if you need this module. ')
     
-from natten import NeighborhoodAttention1D
 from natten import NeighborhoodAttention2D
-
-na1d = NeighborhoodAttention1D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
-na2d = NeighborhoodAttention2D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
     
 def build_positional_encoding(cfg, default_args=None):
     """Builder for Position Encoding."""
@@ -145,15 +141,15 @@ class BaseTransformerLayer_(BaseModule):
 
         self.batch_first = batch_first
 
-        assert set(operation_order) & set(
-            ['self_attn', 'norm', 'ffn', 'cross_attn']) == \
-            set(operation_order), f'The operation_order of' \
-            f' {self.__class__.__name__} should ' \
-            f'contains all four operation type ' \
-            f"{['self_attn', 'norm', 'ffn', 'cross_attn']}"
+        # assert set(operation_order) & set(
+        #     ['self_attn', 'norm', 'ffn', 'cross_attn']) == \
+        #     set(operation_order), f'The operation_order of' \
+        #     f' {self.__class__.__name__} should ' \
+        #     f'contains all four operation type ' \
+        #     f"{['self_attn', 'norm', 'ffn', 'cross_attn']}"
 
         num_attn = operation_order.count('self_attn') + operation_order.count(
-            'cross_attn')
+            'cross_attn') + operation_order.count('Nattn')
         if isinstance(attn_cfgs, dict):
             attn_cfgs = [copy.deepcopy(attn_cfgs) for _ in range(num_attn)]
         else:
@@ -181,13 +177,15 @@ class BaseTransformerLayer_(BaseModule):
                 attention.operation_name = operation_name
                 self.attentions.append(attention)
                 index += 1
-
-        self.embed_dims = self.attentions[0].embed_dims
-
-        self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
-
-        self.scalar = learnable_scalar()
-        print("self.scalar",self.scalar[0])
+                self.embed_dims = self.attentions[0].embed_dims
+            if operation_name in ['adapter_natten']:
+                self.na2d = NeighborhoodAttention2D(dim=256, kernel_size=7, dilation=2, num_heads=8).cuda()
+                self.embed_dims = 256
+                self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
+                self.scalar = learnable_scalar()
+            if operation_name in ['adapter']:
+                self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
+                self.scalar = learnable_scalar()
 
         self.ffns = ModuleList()
         num_ffns = operation_order.count('ffn')
@@ -284,6 +282,12 @@ class BaseTransformerLayer_(BaseModule):
                     **kwargs)
                 attn_index += 1
                 identity = query
+            elif layer == 'Nattn': 
+                H, W, D = query.shape
+                query = torch.reshape(query,(1,H,W,D))
+                query = self.na2d(query)
+                query = torch.reshape(query,(H,W,D))
+                identity = query
 
             elif layer == 'norm':
                 query = self.norms[norm_index](query)
@@ -304,10 +308,23 @@ class BaseTransformerLayer_(BaseModule):
                 identity = query
 
             elif layer == 'ffn':
+                identity_adapter = query
                 query = self.ffns[ffn_index](
                     query, identity if self.pre_norm else None)
                 ffn_index += 1
-                res = self.adapter(query)
+            elif layer == 'adapter': # parallel
+                res = self.adapter(identity_adapter)
                 query = res * self.scalar[0] + query
+
+            elif layer == 'adapter_natten': # parallel
+                H, W, D = identity_adapter.shape
+                queryna2 = identity_adapter
+                queryna2 = torch.reshape(queryna2,(1,H,W,D))
+                queryna2 = self.na2d(queryna2)
+                queryna2 = torch.reshape(queryna2,(H,W,D))
+
+                res = self.adapter(identity_adapter)
+
+                query = res * self.scalar[0] + query + queryna2
 
         return query

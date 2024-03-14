@@ -10,6 +10,16 @@ from mmcv.runner import BaseModule, auto_fp16
 
 from mmdet.core.visualization import imshow_det_bboxes
 from PIL import Image
+import datetime
+
+def generate_timestamp():
+    # Get the current date and time
+    current_datetime = datetime.datetime.now()
+
+    # Format the date as a string (you can customize the format as needed)
+    date_str = current_datetime.strftime("%Y%m%d_%H%M%S")
+
+    return date_str
 
 def Grad_CamDA(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=None, target_layers = None, iiter = None):
     from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
@@ -55,7 +65,8 @@ def Grad_CamDA(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=N
     rgbimg = (rgbimg-np.min(rgbimg))/(np.max(rgbimg)-np.min(rgbimg))
     visualization = show_cam_on_image(rgbimg, grayscale_cam, use_rgb=True) 
     image = Image.fromarray(visualization, mode='RGB')
-    image.save('Grad_Cam/' + 'DAhead_' + str(iiter) + '_' + img_metas[idx]['filename'].split('/')[-1])
+    time = generate_timestamp()
+    image.save('Grad_Cam/' + 'DAhead_' + str(iiter) + '_' + time + '_'+ img_metas[idx]['filename'].split('/')[-1])
 
 def Grad_CamRPN(model, img, img_metas=None, gt_bboxes=None, gt_labels=None, idx=None, target_layers = None, iiter = None):
     from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
@@ -249,7 +260,7 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
     def __init__(self, init_cfg=None):
         super(BaseDetector, self).__init__(init_cfg)
         self.fp16_enabled = False
-        self.num = np.random.randint(0, 5475, 500)
+        self.num = np.random.randint(0, 41070, 1000)
         self.iiter = 1
 
     @property
@@ -489,12 +500,13 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
 
         outputs = dict(
             loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
-        # if self.da_head is not None:
-        #     self.da_head.GradCAM = True
-        #     for idx in range(1):
-        #         print(data['img_metas'][idx]['filename'] + "da_head Visaulizing...")
-        #         Grad_CamDA(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.da_head.conv3, self.iiter)
-        #     self.da_head.GradCAM = False
+        if self.iiter in self.num:
+            if self.da_head is not None:
+                self.da_head.GradCAM = True
+                for idx in range(1):
+                    print(data['img_metas'][idx]['filename'] + "da_head Visaulizing...")
+                    Grad_CamDA(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.da_head.conv3, self.iiter)
+                self.da_head.GradCAM = False
 
         # if self.iiter in self.num:
         # self.rpn_head.GradCAM = True

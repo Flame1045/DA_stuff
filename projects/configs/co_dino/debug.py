@@ -4,8 +4,8 @@ data_root = 'data/coco/'
 classes = ('car',)
 eval_peroid = 100
 saving_peroid = 100
-epochs = 15
-batch_size = 8
+epochs = 5
+batch_size = 2
 target_images = 2975
 source_images = 10000
 numbers_of_images = source_images + target_images * 4
@@ -19,8 +19,8 @@ data = dict(
         [
             dict(
                 type=dataset_type,
-                ann_file='data/coco/Sim2Real_source/sim10k_train.json',
-                img_prefix='data/coco/Sim2Real_source/JPEGImages/',
+                ann_file='data/coco/sim10k_train.json',
+                img_prefix='data/coco/JPEGImages/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -55,8 +55,8 @@ data = dict(
                 ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
-                img_prefix='data/coco/Sim2Real_target/train2017/',
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -91,8 +91,8 @@ data = dict(
             ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
-                img_prefix='data/coco/Sim2Real_target/train2017/',
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -127,8 +127,8 @@ data = dict(
             ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
-                img_prefix='data/coco/Sim2Real_target/train2017/',
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -163,8 +163,8 @@ data = dict(
             ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
-                img_prefix='data/coco/Sim2Real_target/train2017/',
+                ann_file='data/coco/annotations/instances_train2017.json',
+                img_prefix='data/coco/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -201,8 +201,8 @@ data = dict(
 
     val=dict(
         type=dataset_type,
-        ann_file='data/coco/Sim2Real_target/annotations/instances_val2017.json',
-        img_prefix='data/coco/Sim2Real_target/val2017/',
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
         classes=classes,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -230,8 +230,8 @@ data = dict(
         ]),
     test=dict(
         type=dataset_type,
-        ann_file='data/coco/Sim2Real_target/annotations/instances_val2017.json',
-        img_prefix='data/coco/Sim2Real_target/val2017/',
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
         classes=classes,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -260,7 +260,7 @@ data = dict(
 )
 evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True) #
 checkpoint_config = dict(interval=saving_peroid, by_epoch=False) #
-log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
+log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
@@ -393,13 +393,38 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
-                    loss_weight=1.2),
-                loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
+                    loss_weight=12.0),
+                loss_bbox=dict(type='GIoULoss', loss_weight=120.0)))
     ],
-
+    # bbox_head=[
+    #     dict(
+    #         type='CoATSSHead',
+    #         num_classes=1,
+    #         in_channels=256,
+    #         stacked_convs=1,
+    #         feat_channels=256,
+    #         anchor_generator=dict(
+    #             type='AnchorGenerator',
+    #             ratios=[1.0],
+    #             octave_base_scale=8,
+    #             scales_per_octave=1,
+    #             strides=[8, 16, 32, 64, 128]),
+    #         bbox_coder=dict(
+    #             type='DeltaXYWHBBoxCoder',
+    #             target_means=[0.0, 0.0, 0.0, 0.0],
+    #             target_stds=[0.1, 0.1, 0.2, 0.2]),
+    #         loss_cls=dict(
+    #             type='FocalLoss',
+    #             use_sigmoid=True,
+    #             gamma=2.0,
+    #             alpha=0.25,
+    #             loss_weight=12.0),
+    #         loss_bbox=dict(type='GIoULoss', loss_weight=24.0),
+    #         loss_centerness=dict(
+    #             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=12.0))
+    # ],
     da_head=dict(
         type='DAHead',
-        useCTB=True,
         loss=dict(
             type='CrossEntropyLoss',
             use_sigmoid=True,
@@ -487,13 +512,7 @@ optimizer = dict(
             sampling_offsets=dict(lr_mult=0.1),
             reference_points=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
-lr_config = dict(policy='step', step=[200])
-# lr_config = dict(
-#     policy='CosineAnnealing',
-#     warmup='linear',
-#     warmup_iters=1000,
-#     warmup_ratio=1.0 / 10,
-#     min_lr_ratio=1e-5)
+lr_config = dict(policy='step', step=[11])
 # runner = dict(type='EpochBasedRunner', max_epochs=12)
 runner = dict(type='IterBasedRunner', max_iters=total_iters) # 
 

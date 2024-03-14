@@ -837,6 +837,6 @@ class DetrTransformerDecoderLayer_(BaseTransformerLayer_):
             norm_cfg=norm_cfg,
             ffn_num_fcs=ffn_num_fcs,
             **kwargs)
-        assert len(operation_order) == 6
-        assert set(operation_order) == set(
-            ['self_attn', 'norm', 'cross_attn', 'ffn'])
+        # assert len(operation_order) == 6
+        # assert set(operation_order) == set(
+        #     ['self_attn', 'norm', 'cross_attn', 'ffn'])

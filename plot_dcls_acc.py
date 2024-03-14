@@ -21,7 +21,7 @@ if __name__ == '__main__':
    acc = []
    iter = []
    j = 0
-   with open('/media/ee4012/Disk3/Eric/Co-DETR/DA_stuff/outputs/DAAD_NEW/20240206_215601.log', 'r') as r:
+   with open('/media/ee4012/Disk3/Eric/Co-DETR/DA_stuff/outputs/BASE_WA_Test12_Batch8/20240307_003802.log', 'r') as r:
       file =  r.readlines()
       print(file)
       i = 0
@@ -31,7 +31,7 @@ if __name__ == '__main__':
             if (i % 3 == 0):
                j = j + 10
                acc.append(float(l[46:-1]))
-               print(acc)
+               # print(acc)
                iter.append(int(j))
 
    # with open('20231127_122448.log', 'r') as r:
@@ -74,9 +74,5 @@ if __name__ == '__main__':
    plt.legend()
    plt.show()
 
-   from natten import NeighborhoodAttention1D
-   from natten import NeighborhoodAttention2D
 
-   na1d = NeighborhoodAttention1D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
-   na2d = NeighborhoodAttention2D(dim=128, kernel_size=7, dilation=2, num_heads=4).cuda()
 
