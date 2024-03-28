@@ -465,7 +465,7 @@ class MLP_Adapter(nn.Module):
         xs_patch = xs[:, 1:, :]
 
         xs_patch = xs_patch.view(BT, H, W, C)
-        xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch)))
+        xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch))) # or xs = self.natten(xs)
         xs_patch = xs_patch.view(BT, L - 1, C)
         xs = torch.cat((xs_cls, xs_patch), dim=1)
         xs = xs.permute(1, 0, 2)

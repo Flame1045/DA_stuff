@@ -500,43 +500,43 @@
 # python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic
 
 ######ADAPTERTest22####BASE_RES50###### CTB, Dcls 0to1 loss, Adapter in DEC 
-CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA.py"
-WORKDIR='outputs/BASE_WA_Test22_Batch8'
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA.py"
+# WORKDIR='outputs/BASE_WA_Test22_Batch8'
 
-PORT=${PORT:-29500}
+# PORT=${PORT:-29500}
 
-PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
-echo $PYTHONPATH
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
 
-python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
-    --adapter --adapter_choose adapter scalar da_head spatial_fusion_module global_fusion_module saf_module cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
-    --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head spatial_fusion_module global_fusion_module saf_module cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
 
 #####ADAPTERTest20####BASE_RES50###### Dcls 0to1 loss 
-CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_woAnCTB.py"
-WORKDIR='outputs/BASE_WA_Test20_Batch8'
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_woAnCTB.py"
+# WORKDIR='outputs/BASE_WA_Test20_Batch8'
 
-PORT=${PORT:-29500}
+# PORT=${PORT:-29500}
 
-PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
-echo $PYTHONPATH
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
 
-python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
-    --adapter --adapter_choose da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
-    --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
 
 #####ADAPTERTest21####BASE_RES50###### CTB, Dcls 0to1 loss
-CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_woA.py"
-WORKDIR='outputs/BASE_WA_Test21_Batch8'
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_woA.py"
+# WORKDIR='outputs/BASE_WA_Test21_Batch8'
 
-PORT=${PORT:-29500}
+# PORT=${PORT:-29500}
 
-PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
-echo $PYTHONPATH
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
 
-python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
-    --adapter --adapter_choose da_head spatial_fusion_module global_fusion_module saf_module cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
-    --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose da_head spatial_fusion_module global_fusion_module saf_module cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
 
 ######ADAPTERTest23####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
 # CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTB.py"
@@ -550,3 +550,154 @@ python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
 # python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
 #     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
 #     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+
+######ADAPTERTest33####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test33_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+
+# ######ADAPTERTest32####BASE_RES50###### CTB, Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wAV2.py"
+# WORKDIR='outputs/BASE_WA_Test32_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head spatial_fusion_module global_fusion_module saf_module cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+
+
+# adapter_natten_V2 
+
+######ADAPTERTest34####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test34_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.decoder.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a7x7', 'norm')" \
+
+######ADAPTERTest35####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test35_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.decoder.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a13x13', 'norm')" \
+
+
+######ADAPTERTest36####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test36_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.decoder.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a3x3', 'norm')" \
+
+######ADAPTERTest37####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test37_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.decoder.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a7x7R', 'norm')" \
+
+######ADAPTERTest38####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test38_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.transformer.decoder.transformerlayers.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a7x7', 'norm')" \
+    
+
+######ADAPTERTest39####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test39_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.transformer.decoder.transformerlayers.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a3x3', 'norm')" \
+
+######ADAPTERTest40####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+# CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+# WORKDIR='outputs/BASE_WA_Test40_Batch8'
+
+# PORT=${PORT:-29500}
+
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+#     --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+#     model.query_head.transformer.decoder.transformerlayers.operation_order="('self_attn', 'norm', 'cross_attn', 'norm','ffn', 'adapter_natten_V2a5x5R', 'norm')" \
+
+######ADAPTERTest43####BASE_RES50###### Dcls 0to1 loss, Adapter in DEC 
+CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2.py"
+WORKDIR='outputs/BASE_WA_Test43_Batch8'
+
+PORT=${PORT:-29500}
+
+PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+echo $PYTHONPATH
+
+python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+    --adapter --adapter_choose adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+    --load-from "outputs/BASE_RES50/latest.pth" --seed 134084244 \
+    --cfg-options optimizer.lr="0.002" optimizer.weight_decay="0.0000001" \
+    model.query_head.transformer.decoder.transformerlayers.operation_order="('self_attn', 'norm', 'cross_attn_res_adapter', 'norm','ffn', 'adapter_natten_V2a7x7', 'norm')" \
