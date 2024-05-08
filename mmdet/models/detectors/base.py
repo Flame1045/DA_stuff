@@ -500,13 +500,13 @@ class BaseDetector(BaseModule, metaclass=ABCMeta):
 
         outputs = dict(
             loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
-        if self.iiter in self.num:
-            if self.da_head is not None:
-                self.da_head.GradCAM = True
-                for idx in range(1):
-                    print(data['img_metas'][idx]['filename'] + "da_head Visaulizing...")
-                    Grad_CamDA(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.da_head.conv3, self.iiter)
-                self.da_head.GradCAM = False
+        # if self.iiter in self.num:
+        #     if self.da_head is not None:
+        #         self.da_head.GradCAM = True
+        #         for idx in range(1):
+        #             print(data['img_metas'][idx]['filename'] + "da_head Visaulizing...")
+        #             Grad_CamDA(self,data['img'], data['img_metas'], data['gt_bboxes'], data['gt_labels'], idx, self.da_head.conv3, self.iiter)
+        #         self.da_head.GradCAM = False
 
         # if self.iiter in self.num:
         # self.rpn_head.GradCAM = True

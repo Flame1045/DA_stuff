@@ -2,35 +2,22 @@ import math
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 classes = ('car','person','bicycle','rider','train','motorcycle','bus','truck')
-epochs = 40 # 10
-batch_size = 2
-numbers_of_images = 2975
+eval_peroid = 100
+saving_peroid = 100
+epochs = 15
+batch_size = 4
+target_images = 2975
+source_images = 2975
+numbers_of_images = source_images + target_images
 total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
-eval_peroid = int(total_iters / epochs)
-saving_peroid = int(total_iters / epochs)
 
 data = dict(
     samples_per_gpu=batch_size,
     workers_per_gpu=batch_size,
     persistent_workers=True,
-    train=dict(
-            type='MultiImageMixDataset',
-            ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-            img_prefix='data/coco/City2Foggy_source/train2017/',
-            pipeline=[
-                dict(
-                    type='Normalize',
-                    mean=[123.675, 116.28, 103.53],
-                    std=[58.395, 57.12, 57.375],
-                    to_rgb=True),
-                # dict(type='Pad', size_divisor=1),
-                dict(type='DefaultFormatBundle'),
-                dict(
-                    type='Collect',
-                    keys=['img', 'gt_bboxes', 'gt_labels'])
-            ],
-            filter_empty_gt=False,
-            dataset=dict(
+    train = 
+        [
+            dict(
                 type=dataset_type,
                 ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
                 img_prefix='data/coco/City2Foggy_source/train2017/',
@@ -53,11 +40,57 @@ data = dict(
                         allow_negative_crop=True),
                     dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
                     dict(type='RandomFlip', flip_ratio=0.5),
-                    dict(
-                        type='Pad',
+                    dict(type='Pad',
                         size=(1024, 1024),
-                        pad_val=dict(img=(114, 114, 114)))
-        ])),     
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+                ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/City2Foggy_target/annotations/train.json',
+                img_prefix='data/coco/City2Foggy_target/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ])
+        ], 
+
     val=dict(
         type=dataset_type,
         ann_file='data/coco/City2Foggy_target/annotations/val_all.json',
@@ -183,7 +216,7 @@ model = dict(
                 type='DetrTransformerEncoder',
                 num_layers=6,
                 transformerlayers=dict(
-                    type='BaseTransformerLayer',
+                    type='BaseTransformerLayer_', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -197,7 +230,7 @@ model = dict(
                 return_intermediate=True,
                 look_forward_twice=True,
                 transformerlayers=dict(
-                    type='DetrTransformerDecoderLayer',
+                    type='DetrTransformerDecoderLayer_', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -212,7 +245,7 @@ model = dict(
                     feedforward_channels=2048,
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')))),
+                                     'ffn', 'adapter_natten_V2', 'norm')))),
         positional_encoding=dict(
             type='SinePositionalEncoding',
             num_feats=128,
@@ -251,10 +284,18 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
-                    loss_weight=12.0),
-                loss_bbox=dict(type='GIoULoss', loss_weight=120.0)))
+                    loss_weight=1.2),
+                loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
     ],
-
+    da_head=dict(
+        type='DAHead',
+        useCTB=False,
+        loss=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=True,
+        ),
+    ),
+    isSAP=False,
     train_cfg=[
         dict(
             assigner=dict(
@@ -337,7 +378,13 @@ optimizer = dict(
             sampling_offsets=dict(lr_mult=0.1),
             reference_points=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
-lr_config = dict(policy='step', step=[11])
+lr_config = dict(policy='step', step=[5000])
+# lr_config = dict(
+#     policy='CosineAnnealing',
+#     warmup='linear',
+#     warmup_iters=1000,
+#     warmup_ratio=1.0 / 10,
+#     min_lr_ratio=1e-5)
 # runner = dict(type='EpochBasedRunner', max_epochs=12)
 runner = dict(type='IterBasedRunner', max_iters=total_iters) # 
 

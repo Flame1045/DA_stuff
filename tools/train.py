@@ -292,13 +292,13 @@ def main():
     #                 param.requires_grad = False
     #     for name, param in model.named_parameters():
     #         logger.info(f"{name}, _is_trained:{param.requires_grad}")
-    if cfg.grad_cam:
+    elif cfg.grad_cam:
         for name, param in model.named_parameters():
             param.requires_grad = True
             logger.info(f"{name}, _is_trained:{param.requires_grad}")
-    # else:
-    #     for name, param in model.named_parameters():
-    #         logger.info(f"{name}, _is_trained:{param.requires_grad}")
+    else:
+        for name, param in model.named_parameters():
+            logger.info(f"{name}, _is_trained:{param.requires_grad}")
 
     # if True:
     #     Grad_Cam(model, )

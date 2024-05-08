@@ -5,7 +5,7 @@ classes = ('car',)
 eval_peroid = 100
 saving_peroid = 100
 epochs = 15
-batch_size = 8
+batch_size = 4
 target_images = 2975
 source_images = 10000
 numbers_of_images = source_images + target_images * 4
@@ -258,7 +258,7 @@ data = dict(
                 ])
         ])
 )
-evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True) #
+evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True, iou_thrs=[0.5]) #
 checkpoint_config = dict(interval=saving_peroid, by_epoch=False) #
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
@@ -396,15 +396,15 @@ model = dict(
                     loss_weight=1.2),
                 loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
     ],
-
-    da_head=dict(
-        type='DAHead',
-        useCTB=False,
-        loss=dict(
-            type='CrossEntropyLoss',
-            use_sigmoid=True,
-        ),
-    ),
+    # da_head=dict(
+    #     type='DAHead',
+    #     useCTB=False,
+    #     loss=dict(
+    #         type='CrossEntropyLoss',
+    #         use_sigmoid=True,
+    #     ),
+    # ),
+    isSAP=True,
     train_cfg=[
         dict(
             assigner=dict(
@@ -487,7 +487,7 @@ optimizer = dict(
             sampling_offsets=dict(lr_mult=0.1),
             reference_points=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
-lr_config = dict(policy='step', step=[200])
+lr_config = dict(policy='step', step=[5000])
 # lr_config = dict(
 #     policy='CosineAnnealing',
 #     warmup='linear',

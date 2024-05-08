@@ -35,6 +35,7 @@ except ImportError:
                   'You should install ``mmcv-full`` if you need this module. ')
     
 from natten import NeighborhoodAttention2D
+from .slide_attention import SlideAttention
     
 def build_positional_encoding(cfg, default_args=None):
     """Builder for Position Encoding."""
@@ -63,7 +64,7 @@ def build_transformer_layer_sequence(cfg, default_args=None):
 def build_Adapter(input_dim, hidden_dim, output_dim):
     A_layers = list()
     A_layers.append(nn.Linear(input_dim, hidden_dim))
-    A_layers.append(nn.ReLU()) # nn.GELU or nn.ReLU()
+    A_layers.append(nn.GELU()) # nn.GELU or nn.ReLU()
     A_layers.append(nn.Linear(hidden_dim, output_dim))
     return nn.Sequential(*A_layers)
 
@@ -186,6 +187,49 @@ class MLP_Adapter_a(nn.Module):
             x = xs
         return x
     
+class MLP_Adapter_slide(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        # D_hidden_features = int(input_dim * mlp_ratio)
+        # self.D_hidden_features = D_hidden_features
+        self.act = act_layer()
+        # self.ln_1 = LayerNorm(D_hidden_features)
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True)
+        self.conv_B = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
+        self.dropout = nn.Dropout(0.1)
+        self.scale = 1
+        # self.drop_path = nn.Identity()
+        self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
+    
+    def forward(self, x):
+        # x is n (b t) d
+        xs = self.D_fc1(x)
+
+        xs = xs.transpose(1,2)
+        xs = self.conv_B(self.dropout(self.conv_A(xs)))*self.scale+xs
+        xs = xs.transpose(1,2).contiguous()
+
+        xs = self.act(xs)
+        H, W, C = xs.shape
+        xs = torch.reshape(xs,(1,C,H,W))
+        xs, _ , _ = self.silde(xs)
+        xs = torch.reshape(xs,(H,W,C))
+        # xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch))) # or xs = self.natten(xs)
+        # xs_patch = xs_patch.view(BT, L - 1, C)
+        # xs = torch.cat((xs_cls, xs_patch), dim=1)
+        # xs = xs.permute(1, 0, 2)
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+    
 class MLP_Adapter_ratio(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, ratio=0.25):
         super().__init__()
@@ -263,6 +307,11 @@ def build_AdapterV2a13x13(input_dim, hidden_dim, output_dim):
 def build_AdapterV2a5x5(input_dim, hidden_dim, output_dim):
     A_layers = list()
     A_layers.append(MLP_Adapter_a(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
+def build_AdapterV2a5x5_slide(input_dim, hidden_dim, output_dim):
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
     return nn.Sequential(*A_layers)
 
 def build_AdapterV2a3x3(input_dim, hidden_dim, output_dim):
@@ -390,7 +439,9 @@ class BaseTransformerLayer_(BaseModule):
 
         index = 0
         for operation_name in operation_order:
-            if operation_name in ['self_attn', 'cross_attn', 'cross_attn_res_adapter', 'cross_attn_res_adapterV213x13', 'cross_attn_res_adapterV25x5', 'cross_attn_res_adapterV27x7']:
+            if operation_name in ['self_attn', 'slide_attn', 'cross_attn', 'cross_attn_res_adapter', 
+                                  'cross_attn_res_adapterV213x13', 'cross_attn_res_adapterV25x5', 
+                                  'cross_attn_res_adapterV27x7', 'cross_attn_seq_adapterV25x5', 'cross_attn_seq_adapterV25x5_slide']:
                 if 'batch_first' in attn_cfgs[index]:
                     assert self.batch_first == attn_cfgs[index]['batch_first']
                 else:
@@ -402,13 +453,26 @@ class BaseTransformerLayer_(BaseModule):
                 self.attentions.append(attention)
                 index += 1
                 self.embed_dims = self.attentions[0].embed_dims
+            if operation_name in ['slide_attn']:
+                self.slideatten = SlideAttention(dim=256, num_heads=8, ka=3).cuda()
+                # self.embed_dims = 256
+                # self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
+                # self.scalar = learnable_scalar()
             if operation_name in ['adapter_natten']:
                 self.na2d = NeighborhoodAttention2D(dim=256, kernel_size=7, dilation=2, num_heads=8).cuda()
                 self.embed_dims = 256
                 self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
                 self.scalar = learnable_scalar()
             if operation_name in ['adapter']:
-                self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 2,self.embed_dims)
+                self.adapter = build_Adapter(self.embed_dims, self.embed_dims // 4,self.embed_dims)
+                self.scalar = learnable_scalar()
+
+            if operation_name in ['res_adapter']:
+                self.adapter_res = build_AdapterV2a5x5(self.embed_dims, self.embed_dims // 4,self.embed_dims)
+                self.scalar = learnable_scalar()
+            
+            if operation_name in ['seq_adapter']:
+                self.adapter_seq = build_Adapter(self.embed_dims, self.embed_dims // 4,self.embed_dims)
                 self.scalar = learnable_scalar()
 
             if operation_name in ['cross_attn_res_adapter']:
@@ -425,6 +489,14 @@ class BaseTransformerLayer_(BaseModule):
 
             if operation_name in ['cross_attn_res_adapterV213x13']:
                 self.adapter_att = build_AdapterV2a13x13(self.embed_dims, self.embed_dims // 4,self.embed_dims)
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5']:
+                self.adapter_att = build_AdapterV2a5x5(self.embed_dims, self.embed_dims // 4,self.embed_dims)
+                self.scalar_att = learnable_scalar()
+            
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide']:
+                self.adapter_att = build_AdapterV2a5x5_slide(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
                 self.scalar_att = learnable_scalar()
 
             if operation_name in ['adapter_natten_V2']:
@@ -563,6 +635,7 @@ class BaseTransformerLayer_(BaseModule):
 
         for layer in self.operation_order:
             if layer == 'self_attn':
+                # print("self_attn")
                 temp_key = temp_value = query
                 query = self.attentions[attn_index](
                     query,
@@ -577,6 +650,7 @@ class BaseTransformerLayer_(BaseModule):
                 attn_index += 1
                 identity = query
             elif layer == 'Nattn': 
+                # print("Nattn")
                 H, W, D = query.shape
                 query = torch.reshape(query,(1,H,W,D))
                 query = self.na2d(query)
@@ -584,10 +658,12 @@ class BaseTransformerLayer_(BaseModule):
                 identity = query
 
             elif layer == 'norm':
+                # print("norm")
                 query = self.norms[norm_index](query)
                 norm_index += 1
 
             elif layer == 'cross_attn':
+                # print("cross_attn")
                 query = self.attentions[attn_index](
                     query,
                     key,
@@ -602,6 +678,7 @@ class BaseTransformerLayer_(BaseModule):
                 identity = query
 
             elif 'cross_attn_res_adapter' in layer:
+                # print("cross_attn_res_adapter")
                 before_res = query
                 query = self.attentions[attn_index](
                     query,
@@ -618,15 +695,56 @@ class BaseTransformerLayer_(BaseModule):
                 query = res * self.scalar_att[0] + query
                 identity = query
                 # print('cross_attn_res_adapter')
+            
+            elif 'cross_attn_seq_adapter' in layer:
+                # print("cross_attn_seq_adapter")
+                query = self.attentions[attn_index](
+                    query,
+                    key,
+                    value,
+                    identity if self.pre_norm else None,
+                    query_pos=query_pos,
+                    key_pos=key_pos,
+                    attn_mask=attn_masks[attn_index],
+                    key_padding_mask=key_padding_mask,
+                    **kwargs)
+                attn_index += 1
+                query = self.adapter_att(query)
+                identity = query
+                # print('cross_attn_res_adapter')
 
             elif layer == 'ffn':
-                identity_adapter = query
+                # print("ffn")
+                identity_parallel = query
                 query = self.ffns[ffn_index](
                     query, identity if self.pre_norm else None)
                 ffn_index += 1
-            elif 'adapter' in layer: # parallel
-                res = self.adapter(identity_adapter)
+
+            elif 'seq_adapter' in layer: # seq identity is from self_attn
+                # print("seq_adapter")
+                seq = self.adapter_seq(identity)
+                query = seq * self.scalar[0] + identity
+
+            elif 'res_adapter' in layer: # parallel identity_parallel is from ffn
+                # print("res_adapter")
+                res = self.adapter_res(identity_parallel)
                 query = res * self.scalar[0] + query
+
+            elif 'adapter' in layer: # parallel
+                # print("adapter")
+                res = self.adapter(identity_parallel)
+                query = res * self.scalar[0] + query
+
+            elif layer == 'slide_attn':
+                # print("slide_attn")
+                H, W, C = query.shape
+                query = torch.reshape(query,(1,C,H,W))
+                query, _ , _ = self.slideatten(query)
+                query = torch.reshape(query,(H,W,C))
+                attn_index += 1
+                identity = query
+
+            
 
             # elif layer == 'adapter_natten': # parallel
             #     H, W, D = identity_adapter.shape

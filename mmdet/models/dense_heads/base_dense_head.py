@@ -339,7 +339,7 @@ class BaseDenseHead(BaseModule, metaclass=ABCMeta):
         else:
             proposal_list = self.get_bboxes(
                 *outs, img_metas=img_metas, cfg=proposal_cfg)
-            return losses, proposal_list
+            return losses, proposal_list, outs
 
     def simple_test(self, feats, img_metas, rescale=False):
         """Test function without test-time augmentation.

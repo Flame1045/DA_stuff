@@ -7,6 +7,7 @@ from mmdet.core import bbox2result
 from mmdet.models.builder import DETECTORS, build_backbone, build_head, build_neck
 from mmdet.models.detectors.base import BaseDetector
 from mmdet.utils import get_root_logger
+from .sapnet import SAPNet
 
 def add_dicts(dicts):
     result = {}
@@ -133,6 +134,7 @@ class CoDETR(BaseDetector):
                  neck=None,
                  query_head=None,
                  da_head=None,
+                 isSAP=False,
                  rpn_head=None,
                  roi_head=[None],
                  bbox_head=[None],
@@ -164,6 +166,9 @@ class CoDETR(BaseDetector):
         else:
             self.da_head = None
 
+        self.isSAP = isSAP
+        print(self.isSAP)
+
         if query_head is not None:
             query_head.update(train_cfg=train_cfg[head_idx] if (train_cfg is not None and train_cfg[head_idx] is not None) else None)
             query_head.update(test_cfg=test_cfg[head_idx])
@@ -194,6 +199,9 @@ class CoDETR(BaseDetector):
                 bbox_head[i].update(test_cfg=test_cfg[i+head_idx+len(self.roi_head)])
                 self.bbox_head.append(build_head(bbox_head[i]))  
                 self.bbox_head[-1].init_weights() 
+
+        if self.isSAP:
+            self.SAP = SAPNet(num_anchors=5, in_channels=256)
 
         self.head_idx = head_idx
         self.train_cfg = train_cfg
@@ -292,7 +300,12 @@ class CoDETR(BaseDetector):
         gt_labels_ = gt_labels
 
         ret_losses = []
-
+        sap_ret_losses = []
+        input_domain = []
+        count = 0
+        total_count = 0
+        b_size = len(img_)
+        sap_size = 2
         for i in range(0,len(img_)):
             losses = dict()
             img_metas = [img_metas_[i]]
@@ -423,26 +436,26 @@ class CoDETR(BaseDetector):
                         
                     in_da_feat = fused_feature  
 
-                else:
-                    in_da_feat = TRNSF_feat[:-1] # 0 ~ 3 layer
+            else:
+                in_da_feat = TRNSF_feat[:-1] # 0 ~ 3 layer
 
-            if self.da_head is not None:
-                if self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
-                    if self.da_head is not None:
-                        acc, da_loss = self.da_head(in_da_feat, img_metas)
-                        da_loss = upd_loss(da_loss, idx=0)
-                        losses.update(da_loss)
-                        if acc is not None:
-                            self.logger_n.info(f"acc: {acc}")
-                            self.logger_n.info(f"acc: {acc}")
-                            self.logger_n.info(f"acc: {acc}")
-                        # return losses
+            # if self.da_head is not None:
+            #     if self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
+            #         if self.da_head is not None:
+            #             acc, da_loss = self.da_head(in_da_feat, img_metas)
+            #             da_loss = upd_loss(da_loss, idx=0)
+            #             losses.update(da_loss)
+            #             if acc is not None:
+            #                 self.logger_n.info(f"acc: {acc}")
+            #                 self.logger_n.info(f"acc: {acc}")
+            #                 self.logger_n.info(f"acc: {acc}")
+            #             # return losses
 
             # RPN forward and loss
             if self.with_rpn and not gt_bboxes_ignore_Flag:
                 proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
                                                 self.test_cfg[self.head_idx].rpn)
-                rpn_losses, proposal_list = self.rpn_head.forward_train(
+                rpn_losses, proposal_list, proposal_logits = self.rpn_head.forward_train(
                     x,
                     img_metas,
                     gt_bboxes,
@@ -452,7 +465,67 @@ class CoDETR(BaseDetector):
                     **kwargs)
                 losses.update(rpn_losses)
             else:
-                proposal_list = proposals
+                # proposal_list = proposals
+                proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
+                                                self.test_cfg[self.head_idx].rpn)
+                rpn_losses, proposal_list, proposal_logits = self.rpn_head.forward_train(
+                    x,
+                    img_metas,
+                    gt_bboxes,
+                    gt_labels=None,
+                    gt_bboxes_ignore=gt_bboxes_ignore,
+                    proposal_cfg=proposal_cfg,
+                    **kwargs)
+            count = count + 1
+            total_count = total_count + 1
+
+            if self.isSAP:
+                input_domain = []
+                if '_target' in img_metas[-1]['filename']:
+                    input_domain.append('target')
+                if '_source' in img_metas[-1]['filename']:
+                    input_domain.append('source') 
+                prev_proposal_logits = proposal_logits[0]
+                prev_in_da_feat = in_da_feat[-1]
+                SAP_proposal_logits = prev_proposal_logits
+                SAP_in_da_feat = prev_in_da_feat
+                sap_loss = self.SAP(SAP_in_da_feat, SAP_proposal_logits, input_domain) # 0=cls_score, 1=bbox_pred
+                sap_loss = upd_loss(sap_loss, idx=0)
+                ret_losses.append(sap_loss)
+            if False: #TODO add switch
+
+                if count == 1:
+                    input_domain = []
+                    if '_target' in img_metas[-1]['filename']:
+                        input_domain.append('target')
+                    if '_source' in img_metas[-1]['filename']:
+                        input_domain.append('source') 
+                    prev_proposal_logits = proposal_logits[0]
+                    prev_in_da_feat = in_da_feat[-1]
+
+                elif count == 2:
+                    prev_proposal_logits = [torch.cat((t1, t2), dim=0) for t1, t2 in zip(prev_proposal_logits, proposal_logits[0])]
+                    prev_in_da_feat = torch.cat((prev_in_da_feat, in_da_feat[-1]), dim=0)
+                    if '_target' in img_metas[-1]['filename']:
+                        input_domain.append('target')
+                    if '_source' in img_metas[-1]['filename']:
+                        input_domain.append('source') 
+                    # print("input_domain", input_domain)
+                    SAP_proposal_logits = prev_proposal_logits
+                    SAP_in_da_feat = prev_in_da_feat
+                    if all(elem == input_domain[0] for elem in input_domain):
+                        sap_loss = self.SAP(SAP_in_da_feat, SAP_proposal_logits, input_domain) # 0=cls_score, 1=bbox_pred
+                        sap_loss = upd_loss(sap_loss, idx=0)
+                        sap_ret_losses.append(sap_loss)
+                    count = 0
+                    del input_domain, prev_proposal_logits, prev_in_da_feat
+
+                if total_count == b_size:                     
+                    sap_loss = add_dicts(sap_ret_losses)
+                    # print(total_count, "==" ,b_size)
+                    # print("sap_loss:" ,sap_loss)
+                    losses.update(sap_loss)       
+                    total_count = 0                      
 
             if not gt_bboxes_ignore_Flag:
                 positive_coords = []
@@ -493,7 +566,7 @@ class CoDETR(BaseDetector):
             if self.bbox_head.GradCAM or self.rpn_head.GradCAM or self.roi_head.GradCAM and gt_bboxes_ignore_Flag:
                 proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
                                                 self.test_cfg[self.head_idx].rpn)
-                rpn_losses, proposal_list = self.rpn_head.forward_train(
+                rpn_losses, proposal_list, _ = self.rpn_head.forward_train(
                     x,
                     img_metas,
                     gt_bboxes,

@@ -330,13 +330,16 @@ def load_checkpoint(model,
     # interpolate position bias table if needed
     relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]
     for table_key in relative_position_bias_table_keys:
+        # print("table_key:",table_key)
         table_pretrained = state_dict[table_key]
+        # print("table_pretrained:",table_pretrained)
+        # print("table_pretrained.size():",table_pretrained.size())
         if not table_key in model.state_dict().keys():
             print(table_key)
             continue
         table_current = model.state_dict()[table_key]
-        L1, nH1 = table_pretrained.size()
-        L2, nH2 = table_current.size()
+        L1, nH1, _, _, _, _ = table_pretrained.size()
+        L2, nH2, _, _, _, _ = table_current.size()
         if nH1 != nH2:
             logger.warning(f"Error in loading {table_key}, pass")
         else:
