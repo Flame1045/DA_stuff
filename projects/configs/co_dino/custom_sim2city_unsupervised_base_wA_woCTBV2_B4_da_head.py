@@ -264,7 +264,7 @@ log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'), dict(type='Te
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-load_from = None
+load_from = 'pretrained/co_deformable_detr_r50_1x_coco.pth'
 resume_from = None
 workflow = [('train', eval_peroid)] #
 opencv_num_threads = 0
@@ -396,18 +396,15 @@ model = dict(
                     loss_weight=1.2),
                 loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
     ],
-    # da_head=dict(
-    #     type='DAHead',
-    #     useCTB=False,
-    #     loss=dict(
-    #         type='CrossEntropyLoss',
-    #         use_sigmoid=True,
-    #     ),
-    # ),
-    isSAP=True,
-    isARoiLoss=False,
-    gamma=0.5,
-    aroiweight=1.0,
+    da_head=dict(
+        type='DAHead',
+        useCTB=False,
+        loss=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=True,
+        ),
+    ),
+    isSAP=False,
     train_cfg=[
         dict(
             assigner=dict(

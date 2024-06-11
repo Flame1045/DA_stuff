@@ -396,14 +396,14 @@ model = dict(
                     loss_weight=1.2),
                 loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
     ],
-    # da_head=dict(
-    #     type='DAHead',
-    #     useCTB=False,
-    #     loss=dict(
-    #         type='CrossEntropyLoss',
-    #         use_sigmoid=True,
-    #     ),
-    # ),
+    da_head=dict(
+        type='DAHead',
+        useCTB=False,
+        loss=dict(
+            type='CrossEntropyLoss',
+            use_sigmoid=True,
+        ),
+    ),
     isSAP=True,
     isARoiLoss=False,
     gamma=0.5,
@@ -503,7 +503,7 @@ runner = dict(type='IterBasedRunner', max_iters=total_iters) #
 work_dir = 'outputs/DEBUG'
 adapter = False
 adapter_choose = []
-da_head = False
+da_head = True
 grad_cam = False
 auto_resume = False
 gpu_ids = [0]

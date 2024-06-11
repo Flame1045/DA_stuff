@@ -25,9 +25,8 @@
             //             "projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_vis.py",
             //              "outputs/BASE_WA/iter_80000.pth"
             //             ]
-            "args": ["projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2_C2F_B4.py", 
-                        "--work-dir", "outputs/DEBUG", "--deterministic",
-                        "--load-from", "outputs/BASE/latest.pth", "--seed", "134084244"
+            "args": ["projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py", 
+                        "--work-dir", "outputs/DEBUG", "--deterministic"
                     ]
 
         }

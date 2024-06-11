@@ -8,6 +8,9 @@ from mmdet.models.builder import DETECTORS, build_backbone, build_head, build_ne
 from mmdet.models.detectors.base import BaseDetector
 from mmdet.utils import get_root_logger
 from .sapnet import SAPNet
+from .distillation import calculate_attentive_roi_feature_distillation
+import matplotlib.pyplot as plt
+
 
 def add_dicts(dicts):
     result = {}
@@ -21,6 +24,20 @@ def add_dicts(dicts):
             else:
                 result[key] = result.get(key, 0) + value
     return result
+
+def find_identical_values_and_remove(lst):
+    seen = set()
+    identical_indices = []
+
+    for i, value in reversed(list(enumerate(lst))):
+        if value in seen:
+            print(value)
+            identical_indices.append(i)
+            del lst[i]
+        else:
+            seen.add(value)
+
+    return identical_indices
 
 class SpatialWiseFusion(nn.Module):
     def __init__(self, input_channels):
@@ -135,6 +152,9 @@ class CoDETR(BaseDetector):
                  query_head=None,
                  da_head=None,
                  isSAP=False,
+                 isARoiLoss=False,
+                 gamma=0.5,
+                 aroiweight=1.0,
                  rpn_head=None,
                  roi_head=[None],
                  bbox_head=[None],
@@ -167,7 +187,13 @@ class CoDETR(BaseDetector):
             self.da_head = None
 
         self.isSAP = isSAP
-        print(self.isSAP)
+        self.isARoiLoss = isARoiLoss
+        self.gamma = gamma
+        self.roiweight = aroiweight
+        print("self.isSAP:",self.isSAP)
+        print("self.isARoiLoss:",self.isARoiLoss)
+        print("self.gamma:",self.gamma)
+        print("self.roiweight:",self.roiweight)
 
         if query_head is not None:
             query_head.update(train_cfg=train_cfg[head_idx] if (train_cfg is not None and train_cfg[head_idx] is not None) else None)
@@ -214,6 +240,9 @@ class CoDETR(BaseDetector):
                 self.spatial_fusion_module = SpatialWiseFusion(input_channels=256//2).to("cuda:0")
                 self.global_fusion_module = ChannelWiseFusion(input_channels=256//2).to("cuda:0")
                 self.saf_module = ScaleAggregationFusion(input_channels=256, num_scales=5).to("cuda:0")
+
+        self.imgs_feats_name = []
+        self.imgs_feats = []
 
     @property
     def with_rpn(self):
@@ -307,6 +336,8 @@ class CoDETR(BaseDetector):
         b_size = len(img_)
         sap_size = 2
         for i in range(0,len(img_)):
+            two_feats = []
+            feature_distillation_loss_dict = {}
             losses = dict()
             img_metas = [img_metas_[i]]
             img = img_[i].view(1, img_.shape[1], img_.shape[2], img_.shape[3])
@@ -435,21 +466,22 @@ class CoDETR(BaseDetector):
                     fused_feature, scale_weights = self.saf_module(concatenated_hierarchical)
                         
                     in_da_feat = fused_feature  
-
+                else:
+                    in_da_feat = TRNSF_feat[:-1] # 0 ~ 3 layer
             else:
                 in_da_feat = TRNSF_feat[:-1] # 0 ~ 3 layer
 
-            # if self.da_head is not None:
-            #     if self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
-            #         if self.da_head is not None:
-            #             acc, da_loss = self.da_head(in_da_feat, img_metas)
-            #             da_loss = upd_loss(da_loss, idx=0)
-            #             losses.update(da_loss)
-            #             if acc is not None:
-            #                 self.logger_n.info(f"acc: {acc}")
-            #                 self.logger_n.info(f"acc: {acc}")
-            #                 self.logger_n.info(f"acc: {acc}")
-            #             # return losses
+            if self.da_head is not None:
+                if self.da_head.GradCAM == False and self.rpn_head.GradCAM == False and self.bbox_head.GradCAM == False and self.roi_head.GradCAM == False:
+                    if self.da_head is not None:
+                        acc, da_loss = self.da_head(in_da_feat, img_metas)
+                        da_loss = upd_loss(da_loss, idx=0)
+                        losses.update(da_loss)
+                        if acc is not None:
+                            self.logger_n.info(f"acc: {acc}")
+                            self.logger_n.info(f"acc: {acc}")
+                            self.logger_n.info(f"acc: {acc}")
+                        # return losses
 
             # RPN forward and loss
             if self.with_rpn and not gt_bboxes_ignore_Flag:
@@ -491,54 +523,32 @@ class CoDETR(BaseDetector):
                 SAP_in_da_feat = prev_in_da_feat
                 sap_loss = self.SAP(SAP_in_da_feat, SAP_proposal_logits, input_domain) # 0=cls_score, 1=bbox_pred
                 sap_loss = upd_loss(sap_loss, idx=0)
-                ret_losses.append(sap_loss)
-            if False: #TODO add switch
+                ret_losses.append(sap_loss)                  
 
-                if count == 1:
-                    input_domain = []
-                    if '_target' in img_metas[-1]['filename']:
-                        input_domain.append('target')
-                    if '_source' in img_metas[-1]['filename']:
-                        input_domain.append('source') 
-                    prev_proposal_logits = proposal_logits[0]
-                    prev_in_da_feat = in_da_feat[-1]
-
-                elif count == 2:
-                    prev_proposal_logits = [torch.cat((t1, t2), dim=0) for t1, t2 in zip(prev_proposal_logits, proposal_logits[0])]
-                    prev_in_da_feat = torch.cat((prev_in_da_feat, in_da_feat[-1]), dim=0)
-                    if '_target' in img_metas[-1]['filename']:
-                        input_domain.append('target')
-                    if '_source' in img_metas[-1]['filename']:
-                        input_domain.append('source') 
-                    # print("input_domain", input_domain)
-                    SAP_proposal_logits = prev_proposal_logits
-                    SAP_in_da_feat = prev_in_da_feat
-                    if all(elem == input_domain[0] for elem in input_domain):
-                        sap_loss = self.SAP(SAP_in_da_feat, SAP_proposal_logits, input_domain) # 0=cls_score, 1=bbox_pred
-                        sap_loss = upd_loss(sap_loss, idx=0)
-                        sap_ret_losses.append(sap_loss)
-                    count = 0
-                    del input_domain, prev_proposal_logits, prev_in_da_feat
-
-                if total_count == b_size:                     
-                    sap_loss = add_dicts(sap_ret_losses)
-                    # print(total_count, "==" ,b_size)
-                    # print("sap_loss:" ,sap_loss)
-                    losses.update(sap_loss)       
-                    total_count = 0                      
-
-            if not gt_bboxes_ignore_Flag:
+            if not gt_bboxes_ignore_Flag: # source path
                 positive_coords = []
                 for i in range(len(self.roi_head)):
-                    roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+                    roi_losses, ori_bbox_feats = self.roi_head[i].forward_train(x, img_metas, proposal_list,
                                                             gt_bboxes, gt_labels,
                                                             gt_bboxes_ignore, gt_masks,
                                                             **kwargs)
+                    if self.isARoiLoss:
+                        B, C, D = ori_bbox_feats.shape
+                        ori_bbox_feats = torch.reshape(ori_bbox_feats,(1, B, C, D))
+                        self.imgs_feats_name.append(img_metas[-1]['filename'])
+                        self.imgs_feats.append(ori_bbox_feats)
+                        iidx = find_identical_values_and_remove(self.imgs_feats_name)
+                        if iidx:
+                            print("iidx:", iidx)
+                            two_feats.append(self.imgs_feats[iidx[0]])
+                            two_feats.append(self.imgs_feats[-1])
+                            del self.imgs_feats[iidx[0]]
+
                     if self.with_pos_coord:
                         positive_coords.append(roi_losses.pop('pos_coords'))
                     else: 
                         if 'pos_coords' in roi_losses.keys():
-                            tmp = roi_losses.pop('pos_coords')     
+                            tmp = roi_losses.pop('pos_coords')
                     roi_losses = upd_loss(roi_losses, idx=i)
                     losses.update(roi_losses)
                     
@@ -561,7 +571,59 @@ class CoDETR(BaseDetector):
                         bbox_losses = upd_loss(bbox_losses, idx=i)
                         losses.update(bbox_losses)  
                 
-                query_list = self.simple_test_query_head(img, img_metas)           
+                query_list = self.simple_test_query_head(img, img_metas)      
+
+            elif gt_bboxes_ignore_Flag: # target path
+                if self.isARoiLoss:
+                    for i in range(len(self.roi_head)):
+                        _, ori_bbox_feats = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+                                                                    gt_bboxes, gt_labels,
+                                                                    gt_bboxes_ignore, gt_masks,
+                                                                    **kwargs)
+                        B, C, D = ori_bbox_feats.shape
+                        ori_bbox_feats = torch.reshape(ori_bbox_feats,(1, B, C, D))
+                        self.imgs_feats_name.append(img_metas[-1]['filename'])
+                        self.imgs_feats.append(ori_bbox_feats)
+                        iidx = find_identical_values_and_remove(self.imgs_feats_name)
+                        if iidx:
+                            print("iidx:", iidx)
+                            two_feats.append(self.imgs_feats[iidx[0]])
+                            two_feats.append(self.imgs_feats[-1])
+                            del self.imgs_feats[iidx[0]]
+
+            if self.isARoiLoss:
+                if len(two_feats) == 2:
+                    # two_feats = two_feats[0]
+                    self.logger_n.info(f"IN ATT ROI LOSS !!!!!!!!!!!")
+                    if two_feats[0].shape == two_feats[1].shape:
+                        feature_distillation_losses = calculate_attentive_roi_feature_distillation(two_feats[0].detach(), two_feats[1].detach(), gamma=self.gamma)
+                        # tensor_2d_1 = two_feats[0][0][0].detach().cpu()
+                        # tensor_2d_2 = two_feats[1][0][0].detach().cpu()
+
+                        # # Convert the tensors to numpy arrays
+                        # array_2d_1 = tensor_2d_1.numpy()
+                        # array_2d_2 = tensor_2d_2.numpy()
+
+                        # # Create a figure with 1 row and 2 columns of subplots
+                        # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+                        # # Plot the first 2D tensor in the first subplot
+                        # axs[0].imshow(array_2d_1, cmap='gray')
+                        # axs[0].set_title('Tensor 2D - 1')
+                        # # axs[0].axis('off')  # Hide the axes for better visualization
+
+                        # # Plot the second 2D tensor in the second subplot
+                        # axs[1].imshow(array_2d_2, cmap='gray')
+                        # axs[1].set_title('Tensor 2D - 2')
+                        # # axs[1].axis('off')  # Hide the axes for better visualization
+                        # # Adjust layout to prevent overlap
+                        # plt.tight_layout()
+                        # # Save the figure with both subplots
+                        # plt.savefig('ensor_2d_subplots.png')
+
+                        feature_distillation_loss_dict['feature_distillation_losses'] = self.roiweight * feature_distillation_losses      
+                        losses.update(feature_distillation_loss_dict)
+                        del  two_feats, feature_distillation_loss_dict
 
             if self.bbox_head.GradCAM or self.rpn_head.GradCAM or self.roi_head.GradCAM and gt_bboxes_ignore_Flag:
                 proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
@@ -665,6 +727,12 @@ class CoDETR(BaseDetector):
             ret_losses.append(losses)
             
         losses = add_dicts(ret_losses)
+        
+        # print("imgs_feats_name:", self.imgs_feats_name)
+        if len(self.imgs_feats_name) > 3000:
+            del self.imgs_feats_name[:len(self.imgs_feats_name) // 2]
+            del self.imgs_feats[:len(self.imgs_feats) // 2]
+
         return losses
 
 

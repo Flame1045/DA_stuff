@@ -10,3 +10,4 @@ from .da_head import *
 from ._transformer import * 
 from .transformer import *
 from .slide_attention import *
+from .distillation import *

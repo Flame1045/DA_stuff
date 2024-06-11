@@ -299,9 +299,11 @@ def main():
     else:
         for name, param in model.named_parameters():
             logger.info(f"{name}, _is_trained:{param.requires_grad}")
-
-    # if True:
-    #     Grad_Cam(model, )
+    total_params = 0
+    for name, param in model.named_parameters():
+        if param.requires_grad and 'adapter' in name:
+            total_params = total_params + param.numel()
+    logger.info(f"Numbers of {total_params} _is_trained")
 
     train_detector(
         model,

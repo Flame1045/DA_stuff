@@ -137,7 +137,10 @@ class CoStandardRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                                                     gt_masks, img_metas)
             losses.update(mask_results['loss_mask'])
 
-        return losses
+        # print("ori_bbox_targets:",ori_bbox_targets.shape)
+        # print("bbox_results['bbox_feats']:",ori_bbox_feats.shape)
+
+        return losses, ori_bbox_feats
 
     def _bbox_forward(self, x, rois):
         """Box head forward function used in both training and testing."""

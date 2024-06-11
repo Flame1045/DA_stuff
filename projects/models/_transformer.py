@@ -197,7 +197,8 @@ class MLP_Adapter_slide(nn.Module):
         # self.ln_1 = LayerNorm(D_hidden_features)
         self.D_fc1 = nn.Linear(input_dim, hidden_dim)
         self.D_fc2 = nn.Linear(hidden_dim, output_dim)
-        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True)
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True) 
         self.conv_B = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
         self.dropout = nn.Dropout(0.1)
         self.scale = 1
@@ -230,6 +231,214 @@ class MLP_Adapter_slide(nn.Module):
             x = xs
         return x
     
+class MLP_Adapter_slide8(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        # D_hidden_features = int(input_dim * mlp_ratio)
+        # self.D_hidden_features = D_hidden_features
+        self.act = act_layer()
+        # self.ln_1 = LayerNorm(D_hidden_features)
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True) 
+        self.conv_B = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_C = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_D = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_E = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_F = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_G = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_H = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
+        self.dropout = nn.Dropout(0.1)
+        self.scale = 1
+        # self.drop_path = nn.Identity()
+        self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
+    
+    def forward(self, x):
+        # x is n (b t) d
+        xs = self.D_fc1(x)
+
+        xs = xs.transpose(1,2)
+        xs = self.conv_B(self.dropout(self.conv_A(xs)))
+        xs = self.conv_D(self.dropout(self.conv_C(xs)))
+        xs = self.conv_F(self.dropout(self.conv_E(xs)))
+        xs = self.conv_H(self.dropout(self.conv_G(xs)))*self.scale+xs
+        xs = xs.transpose(1,2).contiguous()
+
+        xs = self.act(xs)
+        H, W, C = xs.shape
+        xs = torch.reshape(xs,(1,C,H,W))
+        xs, _ , _ = self.silde(xs)
+        xs = torch.reshape(xs,(H,W,C))
+        # xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch))) # or xs = self.natten(xs)
+        # xs_patch = xs_patch.view(BT, L - 1, C)
+        # xs = torch.cat((xs_cls, xs_patch), dim=1)
+        # xs = xs.permute(1, 0, 2)
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+    
+class MLP_Adapter_slide16(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        # D_hidden_features = int(input_dim * mlp_ratio)
+        # self.D_hidden_features = D_hidden_features
+        self.act = act_layer()
+        # self.ln_1 = LayerNorm(D_hidden_features)
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True) 
+        self.conv_B = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_C = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_D = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_E = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_F = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_G = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_H = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_I = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_J = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_K = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_L = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_M = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_N = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_O = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_P = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
+        self.dropout = nn.Dropout(0.1)
+        self.scale = 1
+        # self.drop_path = nn.Identity()
+        self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
+    
+    def forward(self, x):
+        # x is n (b t) d
+        xs = self.D_fc1(x)
+
+        xs = xs.transpose(1,2)
+        xs = self.conv_B(self.dropout(self.conv_A(xs)))
+        xs = self.conv_D(self.dropout(self.conv_C(xs)))
+        xs = self.conv_F(self.dropout(self.conv_E(xs)))
+        xs = self.conv_H(self.dropout(self.conv_G(xs)))
+        xs = self.conv_J(self.dropout(self.conv_I(xs)))
+        xs = self.conv_L(self.dropout(self.conv_K(xs)))
+        xs = self.conv_N(self.dropout(self.conv_M(xs)))
+        xs = self.conv_P(self.dropout(self.conv_O(xs)))*self.scale+xs
+        xs = xs.transpose(1,2).contiguous()
+
+        xs = self.act(xs)
+        H, W, C = xs.shape
+        xs = torch.reshape(xs,(1,C,H,W))
+        xs, _ , _ = self.silde(xs)
+        xs = torch.reshape(xs,(H,W,C))
+        # xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch))) # or xs = self.natten(xs)
+        # xs_patch = xs_patch.view(BT, L - 1, C)
+        # xs = torch.cat((xs_cls, xs_patch), dim=1)
+        # xs = xs.permute(1, 0, 2)
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+    
+class MLP_Adapter_slide32(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        # D_hidden_features = int(input_dim * mlp_ratio)
+        # self.D_hidden_features = D_hidden_features
+        self.act = act_layer()
+        # self.ln_1 = LayerNorm(D_hidden_features)
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True) 
+        self.conv_B = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_C = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_D = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_E = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_F = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_G = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_H = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_I = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_J = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_K = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_L = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_M = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_N = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_O = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_P = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_Q = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_R = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_S = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_T = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_U = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_V = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_W = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_X = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_Y = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_Z = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_A_ = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_B_ = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_C_ = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_D_ = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_E_ = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_F_ = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
+        self.dropout = nn.Dropout(0.1)
+        self.scale = 1
+        # self.drop_path = nn.Identity()
+        self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
+    
+    def forward(self, x):
+        # x is n (b t) d
+        xs = self.D_fc1(x)
+
+        xs = xs.transpose(1,2)
+        xs = self.conv_B(self.dropout(self.conv_A(xs)))
+        xs = self.conv_D(self.dropout(self.conv_C(xs)))
+        xs = self.conv_F(self.dropout(self.conv_E(xs)))
+        xs = self.conv_H(self.dropout(self.conv_G(xs)))
+        xs = self.conv_J(self.dropout(self.conv_I(xs)))
+        xs = self.conv_L(self.dropout(self.conv_K(xs)))
+        xs = self.conv_N(self.dropout(self.conv_M(xs)))
+        xs = self.conv_P(self.dropout(self.conv_O(xs)))
+        xs = self.conv_R(self.dropout(self.conv_Q(xs)))
+        xs = self.conv_T(self.dropout(self.conv_S(xs)))
+        xs = self.conv_V(self.dropout(self.conv_U(xs)))
+        xs = self.conv_X(self.dropout(self.conv_W(xs)))
+        xs = self.conv_Z(self.dropout(self.conv_Y(xs)))
+        xs = self.conv_B_(self.dropout(self.conv_A_(xs)))
+        xs = self.conv_D_(self.dropout(self.conv_C_(xs)))
+        xs = self.conv_F_(self.dropout(self.conv_E_(xs)))*self.scale+xs
+        xs = xs.transpose(1,2).contiguous()
+
+        xs = self.act(xs)
+        H, W, C = xs.shape
+        xs = torch.reshape(xs,(1,C,H,W))
+        xs, _ , _ = self.silde(xs)
+        xs = torch.reshape(xs,(H,W,C))
+        # xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch))) # or xs = self.natten(xs)
+        # xs_patch = xs_patch.view(BT, L - 1, C)
+        # xs = torch.cat((xs_cls, xs_patch), dim=1)
+        # xs = xs.permute(1, 0, 2)
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+
+
 class MLP_Adapter_ratio(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, ratio=0.25):
         super().__init__()
@@ -312,6 +521,24 @@ def build_AdapterV2a5x5(input_dim, hidden_dim, output_dim):
 def build_AdapterV2a5x5_slide(input_dim, hidden_dim, output_dim):
     A_layers = list()
     A_layers.append(MLP_Adapter_slide(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
+def build_AdapterV2a5x5_slide8(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide8")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide8(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
+def build_AdapterV2a5x5_slide16(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide16")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide16(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
+def build_AdapterV2a5x5_slide32(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide32")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide32(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
     return nn.Sequential(*A_layers)
 
 def build_AdapterV2a3x3(input_dim, hidden_dim, output_dim):
@@ -441,7 +668,8 @@ class BaseTransformerLayer_(BaseModule):
         for operation_name in operation_order:
             if operation_name in ['self_attn', 'slide_attn', 'cross_attn', 'cross_attn_res_adapter', 
                                   'cross_attn_res_adapterV213x13', 'cross_attn_res_adapterV25x5', 
-                                  'cross_attn_res_adapterV27x7', 'cross_attn_seq_adapterV25x5', 'cross_attn_seq_adapterV25x5_slide']:
+                                  'cross_attn_res_adapterV27x7', 'cross_attn_seq_adapterV25x5', 'cross_attn_seq_adapterV25x5_slide', 
+                                  'cross_attn_seq_adapterV25x5_slide8', 'cross_attn_seq_adapterV25x5_slide16', 'cross_attn_seq_adapterV25x5_slide32']:
                 if 'batch_first' in attn_cfgs[index]:
                     assert self.batch_first == attn_cfgs[index]['batch_first']
                 else:
@@ -497,6 +725,18 @@ class BaseTransformerLayer_(BaseModule):
             
             if operation_name in ['cross_attn_seq_adapterV25x5_slide']:
                 self.adapter_att = build_AdapterV2a5x5_slide(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide8']:
+                self.adapter_att = build_AdapterV2a5x5_slide8(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide16']:
+                self.adapter_att = build_AdapterV2a5x5_slide16(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide32']:
+                self.adapter_att = build_AdapterV2a5x5_slide32(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
                 self.scalar_att = learnable_scalar()
 
             if operation_name in ['adapter_natten_V2']:
