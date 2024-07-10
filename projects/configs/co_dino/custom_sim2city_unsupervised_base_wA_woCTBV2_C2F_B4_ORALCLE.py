@@ -2,14 +2,14 @@ import math
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 classes = ('car','person','bicycle','rider','train','motorcycle','bus','truck')
-eval_peroid = 100
-saving_peroid = 100
 epochs = 15 # 15
 batch_size = 4
 target_images = 2975 * 3
 source_images = 2975 * 3
 numbers_of_images = source_images + target_images
 total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
+eval_peroid = total_iters // epochs
+saving_peroid = total_iters // epochs
 
 data = dict(
     samples_per_gpu=batch_size,
@@ -289,7 +289,7 @@ model = dict(
                 num_layers=6,
                 transformerlayers=[
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -298,7 +298,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -307,7 +307,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -316,7 +316,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -325,7 +325,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -334,7 +334,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -351,7 +351,7 @@ model = dict(
                 look_forward_twice=True,
                 transformerlayers=[
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -368,7 +368,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -385,7 +385,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -402,7 +402,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -419,7 +419,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -436,7 +436,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -503,7 +503,7 @@ model = dict(
     #         use_sigmoid=True,
     #     ),
     # ),
-    isSAP=True,
+    isSAP=False,
     isARoiLoss=False,
     gamma=1.0,
     aroiweight=0.2,

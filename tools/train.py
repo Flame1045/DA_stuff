@@ -45,6 +45,11 @@ def parse_args():
         default=False,
         help='da_head')
     parser.add_argument(
+        '--ORACLE', 
+        action='store_true',
+        default=False,
+        help='da_head')
+    parser.add_argument(
         '--grad_cam', 
         action='store_true',
         help='grad_cam')
@@ -186,6 +191,8 @@ def main():
         cfg.grad_cam = args.grad_cam
     if args.pseudo_label_flag is not None:
         cfg.pseudo_label_flag = args.pseudo_label_flag
+    if args.ORACLE is not None:
+        cfg.ORACLE = args.ORACLE
     cfg.auto_resume = args.auto_resume
     if args.gpus is not None:
         cfg.gpu_ids = range(1)
@@ -268,6 +275,7 @@ def main():
     model.CLASSES = datasets[0].CLASSES
 
     model.pseudo_label_flag = cfg.pseudo_label_flag
+    model.ORACLE = cfg.ORACLE
 
 
     if cfg.adapter:
@@ -301,7 +309,7 @@ def main():
             logger.info(f"{name}, _is_trained:{param.requires_grad}")
     total_params = 0
     for name, param in model.named_parameters():
-        if param.requires_grad and 'adapter' in name:
+        if param.requires_grad:
             total_params = total_params + param.numel()
     logger.info(f"Numbers of {total_params} _is_trained")
 

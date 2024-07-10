@@ -261,7 +261,7 @@ class SAPNet(nn.Module):
             domain_loss = self.loss_func(logits, label) ########
             with torch.no_grad():
                 s_acc = (torch.softmax(logits, dim=1).argmax(dim=1) == 1).float().mean() ########
-                self.logger_n.info(f"SAP s_acc: {s_acc}")
+                # self.logger_n.info(f"SAP s_acc: {s_acc}")
             # self.logger_n.info(f"loss_sap_source_domain: {domain_loss}")
             return {'loss_sap_source_domain': domain_loss}
         elif input_domain[-1] == 'target':
@@ -271,7 +271,7 @@ class SAPNet(nn.Module):
             domain_loss = self.loss_func(logits, label) ########
             with torch.no_grad():
                 t_acc = (torch.softmax(logits, dim=1).argmax(dim=1) == 0).float().mean() ########
-                self.logger_n.info(f"SAP t_acc: {t_acc}")
+                # self.logger_n.info(f"SAP t_acc: {t_acc}")
             # self.logger_n.info(f"loss_sap_target_domain: {domain_loss}")
             return {'loss_sap_target_domain': domain_loss}
 

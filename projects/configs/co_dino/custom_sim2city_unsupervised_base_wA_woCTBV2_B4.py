@@ -324,7 +324,8 @@ model = dict(
             encoder=dict(
                 type='DetrTransformerEncoder', 
                 num_layers=6,
-                transformerlayers=dict(
+                transformerlayers=[
+                    dict(
                     type='BaseTransformerLayer_', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
@@ -332,13 +333,61 @@ model = dict(
                         dropout=0.0),
                     feedforward_channels=2048,
                     ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
+                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                    dict(
+                    type='BaseTransformerLayer_', ######
+                    attn_cfgs=dict(
+                        type='MultiScaleDeformableAttention',
+                        embed_dims=256,
+                        dropout=0.0),
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                    dict(
+                    type='BaseTransformerLayer_', ######
+                    attn_cfgs=dict(
+                        type='MultiScaleDeformableAttention',
+                        embed_dims=256,
+                        dropout=0.0),
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                    dict(
+                    type='BaseTransformerLayer_', ######
+                    attn_cfgs=dict(
+                        type='MultiScaleDeformableAttention',
+                        embed_dims=256,
+                        dropout=0.0),
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                    dict(
+                    type='BaseTransformerLayer_', ######
+                    attn_cfgs=dict(
+                        type='MultiScaleDeformableAttention',
+                        embed_dims=256,
+                        dropout=0.0),
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                    dict(
+                    type='BaseTransformerLayer_', ######
+                    attn_cfgs=dict(
+                        type='MultiScaleDeformableAttention',
+                        embed_dims=256,
+                        dropout=0.0),
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                    ]
+                ),
             decoder=dict(
                 type='CoDeformableDetrTransformerDecoder',
                 num_layers=6,
                 return_intermediate=True,
                 look_forward_twice=True,
-                transformerlayers=dict(
+                transformerlayers=[
+                    dict(
                     type='DetrTransformerDecoderLayer_', #######
                     attn_cfgs=[
                         dict(
@@ -354,7 +403,94 @@ model = dict(
                     feedforward_channels=2048,
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'adapter_natten_V2', 'norm')))),
+                                     'ffn', 'norm')), 
+                    dict(
+                    type='DetrTransformerDecoderLayer_', #######
+                    attn_cfgs=[
+                        dict(
+                            type='MultiheadAttention',
+                            embed_dims=256,
+                            num_heads=8,
+                            dropout=0.0),
+                        dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0)
+                    ],
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
+                                     'ffn', 'norm')), 
+                    dict(
+                    type='DetrTransformerDecoderLayer_', #######
+                    attn_cfgs=[
+                        dict(
+                            type='MultiheadAttention',
+                            embed_dims=256,
+                            num_heads=8,
+                            dropout=0.0),
+                        dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0)
+                    ],
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
+                                     'ffn', 'norm')), 
+                    dict(
+                    type='DetrTransformerDecoderLayer_', #######
+                    attn_cfgs=[
+                        dict(
+                            type='MultiheadAttention',
+                            embed_dims=256,
+                            num_heads=8,
+                            dropout=0.0),
+                        dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0)
+                    ],
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
+                                     'ffn', 'norm')), 
+                    dict(
+                    type='DetrTransformerDecoderLayer_', #######
+                    attn_cfgs=[
+                        dict(
+                            type='MultiheadAttention',
+                            embed_dims=256,
+                            num_heads=8,
+                            dropout=0.0),
+                        dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0)
+                    ],
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
+                                     'ffn', 'norm')), 
+                    dict(
+                    type='DetrTransformerDecoderLayer_', #######
+                    attn_cfgs=[
+                        dict(
+                            type='MultiheadAttention',
+                            embed_dims=256,
+                            num_heads=8,
+                            dropout=0.0),
+                        dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0)
+                    ],
+                    feedforward_channels=2048,
+                    ffn_dropout=0.0,
+                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
+                                     'ffn', 'norm')), 
+                    ]
+                )),
         positional_encoding=dict(
             type='SinePositionalEncoding',
             num_feats=128,

@@ -1,15 +1,15 @@
 import math 
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
-classes = ('car','person','bicycle','rider','train','motorcycle','bus','truck')
-eval_peroid = 100
-saving_peroid = 100
-epochs = 15 # 15
+classes = ('car',)
+epochs = 15
 batch_size = 4
-target_images = 2975 * 3
-source_images = 2975 * 3
-numbers_of_images = source_images + target_images
+target_images = 2975
+source_images = 10000
+numbers_of_images = source_images + target_images * 4
 total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
+eval_peroid = total_iters // epochs
+saving_peroid = total_iters // epochs
 
 data = dict(
     samples_per_gpu=batch_size,
@@ -19,8 +19,8 @@ data = dict(
         [
             dict(
                 type=dataset_type,
-                ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-                img_prefix='data/coco/City2Foggy_source/train2017/',
+                ann_file='data/coco/Sim2Real_source/sim10k_train.json',
+                img_prefix='data/coco/Sim2Real_source/JPEGImages/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -55,8 +55,8 @@ data = dict(
                 ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-                img_prefix='data/coco/City2Foggy_source/train2017/',
+                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
+                img_prefix='data/coco/Sim2Real_target/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -88,11 +88,11 @@ data = dict(
                     dict(
                         type='Collect',
                         keys=['img', 'gt_bboxes', 'gt_labels'])
-                ]),
+            ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-                img_prefix='data/coco/City2Foggy_source/train2017/',
+                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
+                img_prefix='data/coco/Sim2Real_target/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -124,11 +124,11 @@ data = dict(
                     dict(
                         type='Collect',
                         keys=['img', 'gt_bboxes', 'gt_labels'])
-                ]),
+            ]),
             dict(
                 type=dataset_type,
-                ann_file='data/coco/City2Foggy_target/annotations/train.json',
-                img_prefix='data/coco/City2Foggy_target/train2017/',
+                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
+                img_prefix='data/coco/Sim2Real_target/train2017/',
                 classes=classes,
                 filter_empty_gt=False,
                 pipeline=[
@@ -160,13 +160,49 @@ data = dict(
                     dict(
                         type='Collect',
                         keys=['img', 'gt_bboxes', 'gt_labels'])
-            ])
+            ]),
+            dict(
+                type=dataset_type,
+                ann_file='data/coco/Sim2Real_target/annotations/instances_train2017.json',
+                img_prefix='data/coco/Sim2Real_target/train2017/',
+                classes=classes,
+                filter_empty_gt=False,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                    dict(
+                        type='Resize',
+                        img_scale=(1024, 1024),
+                        ratio_range=(0.1, 2.0),
+                        multiscale_mode='range',
+                        keep_ratio=True),
+                    dict(
+                        type='RandomCrop',
+                        crop_type='absolute_range',
+                        crop_size=(1024, 1024),
+                        recompute_bbox=True,
+                        allow_negative_crop=True),
+                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                    dict(type='RandomFlip', flip_ratio=0.5),
+                    dict(type='Pad',
+                        size=(1024, 1024),
+                        pad_val=dict(img=(114, 114, 114))),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='DefaultFormatBundle'),
+                    dict(
+                        type='Collect',
+                        keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
         ], 
 
     val=dict(
         type=dataset_type,
-        ann_file='data/coco/City2Foggy_target/annotations/val_all.json',
-        img_prefix='data/coco/City2Foggy_target/val2017/',
+        ann_file='data/coco/Sim2Real_target/annotations/instances_val2017.json',
+        img_prefix='data/coco/Sim2Real_target/val2017/',
         classes=classes,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -194,8 +230,8 @@ data = dict(
         ]),
     test=dict(
         type=dataset_type,
-        ann_file='data/coco/City2Foggy_target/annotations/val_all.json',
-        img_prefix='data/coco/City2Foggy_target/val2017/',
+        ann_file='data/coco/Sim2Real_target/annotations/instances_val2017.json',
+        img_prefix='data/coco/Sim2Real_target/val2017/',
         classes=classes,
         pipeline=[
             dict(type='LoadImageFromFile'),
@@ -220,7 +256,8 @@ data = dict(
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
                 ])
-        ]))
+        ])
+)
 evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True, iou_thrs=[0.5]) #
 checkpoint_config = dict(interval=saving_peroid, by_epoch=False) #
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
@@ -275,7 +312,7 @@ model = dict(
     query_head=dict(
         type='CoDeformDETRHead',
         num_query=300,
-        num_classes=8,
+        num_classes=1,
         in_channels=2048,
         sync_cls_avg_factor=True,
         with_box_refine=True,
@@ -285,11 +322,11 @@ model = dict(
             type='CoDeformableDetrTransformer',
             num_co_heads=2,
             encoder=dict(
-                type='DetrTransformerEncoder',
+                type='DetrTransformerEncoder', 
                 num_layers=6,
                 transformerlayers=[
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -298,7 +335,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -307,7 +344,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -316,7 +353,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -325,7 +362,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -334,7 +371,7 @@ model = dict(
                     ffn_dropout=0.0,
                     operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer_', ######
+                    type='BaseTransformerLayer', ######
                     attn_cfgs=dict(
                         type='MultiScaleDeformableAttention',
                         embed_dims=256,
@@ -351,7 +388,7 @@ model = dict(
                 look_forward_twice=True,
                 transformerlayers=[
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -368,7 +405,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -385,7 +422,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -402,7 +439,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -419,7 +456,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -436,7 +473,7 @@ model = dict(
                     operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
                                      'ffn', 'norm')), 
                     dict(
-                    type='DetrTransformerDecoderLayer_', #######
+                    type='DetrTransformerDecoderLayer', #######
                     attn_cfgs=[
                         dict(
                             type='MultiheadAttention',
@@ -482,7 +519,7 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=8,
+                num_classes=1,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -503,10 +540,10 @@ model = dict(
     #         use_sigmoid=True,
     #     ),
     # ),
-    isSAP=True,
+    isSAP=False,
     isARoiLoss=False,
-    gamma=1.0,
-    aroiweight=0.2,
+    gamma=0.5,
+    aroiweight=1.0,
     train_cfg=[
         dict(
             assigner=dict(
@@ -593,9 +630,9 @@ lr_config = dict(policy='step', step=[5000])
 # lr_config = dict(
 #     policy='CosineAnnealing',
 #     warmup='linear',
-#     warmup_iters=100,
+#     warmup_iters=1000,
 #     warmup_ratio=1.0 / 10,
-#     min_lr_ratio=1e-3)
+#     min_lr_ratio=1e-5)
 # runner = dict(type='EpochBasedRunner', max_epochs=12)
 runner = dict(type='IterBasedRunner', max_iters=total_iters) # 
 

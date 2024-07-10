@@ -46,11 +46,33 @@
             ###############################################################################
 #####TEST#####
 
-CONFIG="/media/ee4012/Disk3/Eric/Co-DETR/DA_stuff/outputs/BASE_WA_Test60++3_Batch4/custom_sim2city_unsupervised_base_wA_woCTBV2_C2F_B4.py"
+# CONFIG="/media/ee4012/Disk3/Eric/Co-DETR/DA_stuff/outputs/BASE_WA_Test60++3_Batch4/custom_sim2city_unsupervised_base_wA_woCTBV2_C2F_B4.py"
+# PORT=${PORT:-29500}
+# PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+# echo $PYTHONPATH
+# WORKDIR="outputs/BASE_WA_Test60++3_Batch4"
+# python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+#     --adapter --adapter_choose SAP adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+#     --resume-from $WORKDIR/latest.pth --seed 134084244 \
+
+######ADAPTERTest80+iter####BASE_RES50###### RESUME
+CONFIG="projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2_C2F_B4.py"
 PORT=${PORT:-29500}
 PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
 echo $PYTHONPATH
-WORKDIR="outputs/BASE_WA_Test60++3_Batch4"
-python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
-    --adapter --adapter_choose SAP adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
-    --resume-from $WORKDIR/latest.pth --seed 134084244 \
+# Define the learning rates as an array
+LR_VALUES=(0.001)
+
+for ((i=1; i<=1; i++)); do
+      WORKDIR="outputs/BASE_WA_Test80+${i}"
+      # Choose LR sequentially from the array using the loop index
+      LR=${LR_VALUES[$i - 1]}  # Subtracting 1 because array index starts from 0
+      echo "Running iteration $i with WORKDIR=$WORKDIR"
+      python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+         --adapter --adapter_choose slideatten SAP adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+         --resume-from $WORKDIR/latest.pth --seed 134084244 \
+         --cfg-options optimizer.lr="$LR" optimizer.weight_decay="0.0000001" model.aroiweight="1.0" model.gamma="0.5" \
+         model.query_head.transformer.decoder.transformerlayers.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')"
+
+done

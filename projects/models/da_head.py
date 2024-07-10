@@ -151,7 +151,7 @@ class DAHead(BaseModule):
                 acc = (self.count / self.total) * 100.0
                 self.count = 0.0
                 self.total = 0
-                print("Alpha", self.Alpha)
+                # print("Alpha", self.Alpha)
                 return acc, ret
             else:
                 return None, ret

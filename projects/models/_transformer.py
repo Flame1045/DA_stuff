@@ -16,6 +16,7 @@ from mmcv.utils import (ConfigDict, build_from_cfg, deprecated_api_warning,
 from mmcv.cnn.bricks.drop import build_dropout
 from mmcv.cnn.bricks.registry import (ATTENTION, FEEDFORWARD_NETWORK, POSITIONAL_ENCODING,
                        TRANSFORMER_LAYER, TRANSFORMER_LAYER_SEQUENCE)
+from einops import rearrange
 
 # Avoid BC-breaking of importing MultiScaleDeformableAttention from this file
 try:
@@ -235,10 +236,7 @@ class MLP_Adapter_slide8(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
         super().__init__()
         self.skip_connect = skip_connect
-        # D_hidden_features = int(input_dim * mlp_ratio)
-        # self.D_hidden_features = D_hidden_features
         self.act = act_layer()
-        # self.ln_1 = LayerNorm(D_hidden_features)
         self.D_fc1 = nn.Linear(input_dim, hidden_dim)
         self.D_fc2 = nn.Linear(hidden_dim, output_dim)
         # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
@@ -252,29 +250,27 @@ class MLP_Adapter_slide8(nn.Module):
         self.conv_H = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
         self.dropout = nn.Dropout(0.1)
         self.scale = 1
-        # self.drop_path = nn.Identity()
         self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
     
     def forward(self, x):
-        # x is n (b t) d
-        xs = self.D_fc1(x)
 
-        xs = xs.transpose(1,2)
+        xs = self.D_fc1(x)
+        H, W, C = xs.shape # 300 1 64
+        xs = xs.unsqueeze(0)
+        xs = rearrange(xs, 'b h w c -> b c (h w)')
         xs = self.conv_B(self.dropout(self.conv_A(xs)))
         xs = self.conv_D(self.dropout(self.conv_C(xs)))
         xs = self.conv_F(self.dropout(self.conv_E(xs)))
         xs = self.conv_H(self.dropout(self.conv_G(xs)))*self.scale+xs
-        xs = xs.transpose(1,2).contiguous()
-
+        xs = rearrange(xs, 'b c (h w) -> b h w c', h=H, w=W)
         xs = self.act(xs)
-        H, W, C = xs.shape
+        xs = xs.squeeze(0)
+
         xs = torch.reshape(xs,(1,C,H,W))
         xs, _ , _ = self.silde(xs)
         xs = torch.reshape(xs,(H,W,C))
-        # xs_patch = xs_patch + self.drop_path(self.natten(self.ln_1(xs_patch))) # or xs = self.natten(xs)
-        # xs_patch = xs_patch.view(BT, L - 1, C)
-        # xs = torch.cat((xs_cls, xs_patch), dim=1)
-        # xs = xs.permute(1, 0, 2)
+
+
 
         xs = self.D_fc2(xs)
 
@@ -284,6 +280,102 @@ class MLP_Adapter_slide8(nn.Module):
             x = xs
         return x
     
+
+class MLP_Adapter_slide8_nosilde(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        self.act = act_layer()
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True) 
+        self.conv_B = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_C = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_D = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_E = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_F = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_G = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_H = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
+        self.dropout = nn.Dropout(0.1)
+        self.scale = 1
+    
+    def forward(self, x):
+        # x is n (b t) d
+        xs = self.D_fc1(x)
+
+        H, W, C = xs.shape # 300 1 64
+        xs = xs.unsqueeze(0)
+        xs = rearrange(xs, 'b h w c -> b c (h w)')
+
+        xs = self.conv_B(self.dropout(self.conv_A(xs)))
+        xs = self.conv_D(self.dropout(self.conv_C(xs)))
+        xs = self.conv_F(self.dropout(self.conv_E(xs)))
+        xs = self.conv_H(self.dropout(self.conv_G(xs)))*self.scale+xs
+        xs = rearrange(xs, 'b c (h w) -> b h w c', h=H, w=W)
+        xs = self.act(xs)
+        xs = xs.squeeze(0)
+        # xs = rearrange(xs, 'c h w -> h w c', h=H, w=W)
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+    
+class MLP_Adapter_slide8_nomlp(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        self.act = act_layer()
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+
+        self.scale = 1
+        self.drop_path = nn.Identity()
+        self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
+    
+    def forward(self, x):
+        xs = self.D_fc1(x)
+        xs = self.act(xs)
+        H, W, C = xs.shape
+        xs = torch.reshape(xs,(1,C,H,W))
+        xs, _ , _ = self.silde(xs)
+        xs = torch.reshape(xs,(H,W,C))
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+    
+class MLP_Adapter_slide8_nosilde_nomlp(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        self.act = act_layer()
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        self.scale = 1
+
+    
+    def forward(self, x):
+        # x is n (b t) d
+        xs = self.D_fc1(x)
+
+        xs = self.act(xs)
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+
 class MLP_Adapter_slide16(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
         super().__init__()
@@ -529,6 +621,24 @@ def build_AdapterV2a5x5_slide8(input_dim, hidden_dim, output_dim):
     A_layers.append(MLP_Adapter_slide8(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
     return nn.Sequential(*A_layers)
 
+def build_AdapterV2a5x5_slide8_nosilde(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide8_nosilde")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide8_nosilde(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
+def build_AdapterV2a5x5_slide8_nomlp(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide8_nomlp")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide8_nomlp(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
+def build_AdapterV2a5x5_slide8_nosilde_nomlp(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide8_nosilde_nomlp")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide8_nosilde_nomlp(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
 def build_AdapterV2a5x5_slide16(input_dim, hidden_dim, output_dim):
     print("build_AdapterV2a5x5_slide16")
     A_layers = list()
@@ -667,9 +777,17 @@ class BaseTransformerLayer_(BaseModule):
         index = 0
         for operation_name in operation_order:
             if operation_name in ['self_attn', 'slide_attn', 'cross_attn', 'cross_attn_res_adapter', 
-                                  'cross_attn_res_adapterV213x13', 'cross_attn_res_adapterV25x5', 
-                                  'cross_attn_res_adapterV27x7', 'cross_attn_seq_adapterV25x5', 'cross_attn_seq_adapterV25x5_slide', 
-                                  'cross_attn_seq_adapterV25x5_slide8', 'cross_attn_seq_adapterV25x5_slide16', 'cross_attn_seq_adapterV25x5_slide32']:
+                                  'cross_attn_res_adapterV213x13', 
+                                  'cross_attn_res_adapterV25x5', 
+                                  'cross_attn_res_adapterV27x7', 
+                                  'cross_attn_seq_adapterV25x5', 
+                                  'cross_attn_seq_adapterV25x5_slide8', 
+                                  'cross_attn_seq_adapterV25x5_slide', 
+                                  'cross_attn_seq_adapterV25x5_slide8_nomlp',
+                                  'cross_attn_seq_adapterV25x5_slide8_nosilde', 
+                                  'cross_attn_seq_adapterV25x5_slide8_nosilde_nomlp',
+                                  'cross_attn_seq_adapterV25x5_slide16', 
+                                  'cross_attn_seq_adapterV25x5_slide32']:
                 if 'batch_first' in attn_cfgs[index]:
                     assert self.batch_first == attn_cfgs[index]['batch_first']
                 else:
@@ -729,6 +847,18 @@ class BaseTransformerLayer_(BaseModule):
 
             if operation_name in ['cross_attn_seq_adapterV25x5_slide8']:
                 self.adapter_att = build_AdapterV2a5x5_slide8(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide8_nosilde']:
+                self.adapter_att = build_AdapterV2a5x5_slide8_nosilde(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide8_nomlp']:
+                self.adapter_att = build_AdapterV2a5x5_slide8_nomlp(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide8_nosilde_nomlp']:
+                self.adapter_att = build_AdapterV2a5x5_slide8_nosilde_nomlp(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
                 self.scalar_att = learnable_scalar()
 
             if operation_name in ['cross_attn_seq_adapterV25x5_slide16']:

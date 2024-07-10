@@ -25,9 +25,11 @@
             //             "projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_vis.py",
             //              "outputs/BASE_WA/iter_80000.pth"
             //             ]
-            "args": ["projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py", 
-                        "--work-dir", "outputs/DEBUG", "--deterministic"
-                    ]
+            "args": [
+                "projects/configs/co_dino/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py",
+                "--work-dir","outputs/debugg_QQ","--deterministic","--cfg-options",
+                "model.query_head.transformer.decoder.transformerlayers.operation_order='('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')'",
+                "model.query_head.transformer.encoder.transformerlayers.operation_order='('self_attn', 'norm', 'ffn', 'adapter', 'norm')'"]
 
         }
     ]

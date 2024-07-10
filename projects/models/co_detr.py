@@ -376,6 +376,9 @@ class CoDETR(BaseDetector):
                     # print("gt_bboxes_ignore:",gt_bboxes_ignore)
                 else:
                     gt_bboxes_ignore_Flag = False
+            
+            if self.ORACLE:
+                gt_bboxes_ignore_Flag = False
 
             # if img_metas[0]["ori_filename"][-4:] != img_metas[1]["ori_filename"][-4:]:
             #     assert print("~~~~~~~~",img_metas[0]["ori_filename"], img_metas[1]["ori_filename"])
@@ -477,10 +480,10 @@ class CoDETR(BaseDetector):
                         acc, da_loss = self.da_head(in_da_feat, img_metas)
                         da_loss = upd_loss(da_loss, idx=0)
                         losses.update(da_loss)
-                        if acc is not None:
-                            self.logger_n.info(f"acc: {acc}")
-                            self.logger_n.info(f"acc: {acc}")
-                            self.logger_n.info(f"acc: {acc}")
+                        # if acc is not None:
+                        #     self.logger_n.info(f"acc: {acc}")
+                        #     self.logger_n.info(f"acc: {acc}")
+                        #     self.logger_n.info(f"acc: {acc}")
                         # return losses
 
             # RPN forward and loss
@@ -511,11 +514,11 @@ class CoDETR(BaseDetector):
             count = count + 1
             total_count = total_count + 1
 
-            if self.isSAP:
+            if self.isSAP: # DA path
                 input_domain = []
                 if '_target' in img_metas[-1]['filename']:
                     input_domain.append('target')
-                if '_source' in img_metas[-1]['filename']:
+                if '_source' in img_metas[-1]['filename']: 
                     input_domain.append('source') 
                 prev_proposal_logits = proposal_logits[0]
                 prev_in_da_feat = in_da_feat[-1]
@@ -525,7 +528,7 @@ class CoDETR(BaseDetector):
                 sap_loss = upd_loss(sap_loss, idx=0)
                 ret_losses.append(sap_loss)                  
 
-            if not gt_bboxes_ignore_Flag: # source path
+            if not gt_bboxes_ignore_Flag: # source or ORALCLE path 
                 positive_coords = []
                 for i in range(len(self.roi_head)):
                     roi_losses, ori_bbox_feats = self.roi_head[i].forward_train(x, img_metas, proposal_list,
@@ -573,156 +576,156 @@ class CoDETR(BaseDetector):
                 
                 query_list = self.simple_test_query_head(img, img_metas)      
 
-            elif gt_bboxes_ignore_Flag: # target path
-                if self.isARoiLoss:
-                    for i in range(len(self.roi_head)):
-                        _, ori_bbox_feats = self.roi_head[i].forward_train(x, img_metas, proposal_list,
-                                                                    gt_bboxes, gt_labels,
-                                                                    gt_bboxes_ignore, gt_masks,
-                                                                    **kwargs)
-                        B, C, D = ori_bbox_feats.shape
-                        ori_bbox_feats = torch.reshape(ori_bbox_feats,(1, B, C, D))
-                        self.imgs_feats_name.append(img_metas[-1]['filename'])
-                        self.imgs_feats.append(ori_bbox_feats)
-                        iidx = find_identical_values_and_remove(self.imgs_feats_name)
-                        if iidx:
-                            print("iidx:", iidx)
-                            two_feats.append(self.imgs_feats[iidx[0]])
-                            two_feats.append(self.imgs_feats[-1])
-                            del self.imgs_feats[iidx[0]]
+            # elif gt_bboxes_ignore_Flag: # target path
+            #     if self.isARoiLoss:
+            #         for i in range(len(self.roi_head)):
+            #             _, ori_bbox_feats = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+            #                                                         gt_bboxes, gt_labels,
+            #                                                         gt_bboxes_ignore, gt_masks,
+            #                                                         **kwargs)
+            #             B, C, D = ori_bbox_feats.shape
+            #             ori_bbox_feats = torch.reshape(ori_bbox_feats,(1, B, C, D))
+            #             self.imgs_feats_name.append(img_metas[-1]['filename'])
+            #             self.imgs_feats.append(ori_bbox_feats)
+            #             iidx = find_identical_values_and_remove(self.imgs_feats_name)
+            #             if iidx:
+            #                 print("iidx:", iidx)
+            #                 two_feats.append(self.imgs_feats[iidx[0]])
+            #                 two_feats.append(self.imgs_feats[-1])
+            #                 del self.imgs_feats[iidx[0]]
 
-            if self.isARoiLoss:
-                if len(two_feats) == 2:
-                    # two_feats = two_feats[0]
-                    self.logger_n.info(f"IN ATT ROI LOSS !!!!!!!!!!!")
-                    if two_feats[0].shape == two_feats[1].shape:
-                        feature_distillation_losses = calculate_attentive_roi_feature_distillation(two_feats[0].detach(), two_feats[1].detach(), gamma=self.gamma)
-                        # tensor_2d_1 = two_feats[0][0][0].detach().cpu()
-                        # tensor_2d_2 = two_feats[1][0][0].detach().cpu()
+            # if self.isARoiLoss:
+            #     if len(two_feats) == 2:
+            #         # two_feats = two_feats[0]
+            #         self.logger_n.info(f"IN ATT ROI LOSS !!!!!!!!!!!")
+            #         if two_feats[0].shape == two_feats[1].shape:
+            #             feature_distillation_losses = calculate_attentive_roi_feature_distillation(two_feats[0].detach(), two_feats[1].detach(), gamma=self.gamma)
+            #             # tensor_2d_1 = two_feats[0][0][0].detach().cpu()
+            #             # tensor_2d_2 = two_feats[1][0][0].detach().cpu()
 
-                        # # Convert the tensors to numpy arrays
-                        # array_2d_1 = tensor_2d_1.numpy()
-                        # array_2d_2 = tensor_2d_2.numpy()
+            #             # # Convert the tensors to numpy arrays
+            #             # array_2d_1 = tensor_2d_1.numpy()
+            #             # array_2d_2 = tensor_2d_2.numpy()
 
-                        # # Create a figure with 1 row and 2 columns of subplots
-                        # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+            #             # # Create a figure with 1 row and 2 columns of subplots
+            #             # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
-                        # # Plot the first 2D tensor in the first subplot
-                        # axs[0].imshow(array_2d_1, cmap='gray')
-                        # axs[0].set_title('Tensor 2D - 1')
-                        # # axs[0].axis('off')  # Hide the axes for better visualization
+            #             # # Plot the first 2D tensor in the first subplot
+            #             # axs[0].imshow(array_2d_1, cmap='gray')
+            #             # axs[0].set_title('Tensor 2D - 1')
+            #             # # axs[0].axis('off')  # Hide the axes for better visualization
 
-                        # # Plot the second 2D tensor in the second subplot
-                        # axs[1].imshow(array_2d_2, cmap='gray')
-                        # axs[1].set_title('Tensor 2D - 2')
-                        # # axs[1].axis('off')  # Hide the axes for better visualization
-                        # # Adjust layout to prevent overlap
-                        # plt.tight_layout()
-                        # # Save the figure with both subplots
-                        # plt.savefig('ensor_2d_subplots.png')
+            #             # # Plot the second 2D tensor in the second subplot
+            #             # axs[1].imshow(array_2d_2, cmap='gray')
+            #             # axs[1].set_title('Tensor 2D - 2')
+            #             # # axs[1].axis('off')  # Hide the axes for better visualization
+            #             # # Adjust layout to prevent overlap
+            #             # plt.tight_layout()
+            #             # # Save the figure with both subplots
+            #             # plt.savefig('ensor_2d_subplots.png')
 
-                        feature_distillation_loss_dict['feature_distillation_losses'] = self.roiweight * feature_distillation_losses      
-                        losses.update(feature_distillation_loss_dict)
-                        del  two_feats, feature_distillation_loss_dict
+            #             feature_distillation_loss_dict['feature_distillation_losses'] = self.roiweight * feature_distillation_losses      
+            #             losses.update(feature_distillation_loss_dict)
+            #             del  two_feats, feature_distillation_loss_dict
 
-            if self.bbox_head.GradCAM or self.rpn_head.GradCAM or self.roi_head.GradCAM and gt_bboxes_ignore_Flag:
-                proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
-                                                self.test_cfg[self.head_idx].rpn)
-                rpn_losses, proposal_list, _ = self.rpn_head.forward_train(
-                    x,
-                    img_metas,
-                    gt_bboxes,
-                    gt_labels=None,
-                    gt_bboxes_ignore=gt_bboxes_ignore,
-                    proposal_cfg=proposal_cfg,
-                    **kwargs)
+            # if self.bbox_head.GradCAM or self.rpn_head.GradCAM or self.roi_head.GradCAM and gt_bboxes_ignore_Flag:
+            #     proposal_cfg = self.train_cfg[self.head_idx].get('rpn_proposal',
+            #                                     self.test_cfg[self.head_idx].rpn)
+            #     rpn_losses, proposal_list, _ = self.rpn_head.forward_train(
+            #         x,
+            #         img_metas,
+            #         gt_bboxes,
+            #         gt_labels=None,
+            #         gt_bboxes_ignore=gt_bboxes_ignore,
+            #         proposal_cfg=proposal_cfg,
+            #         **kwargs)
                 
-                positive_coords = []
-                for i in range(len(self.roi_head)):
-                    roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
-                                                            gt_bboxes, gt_labels,
-                                                            gt_bboxes_ignore, gt_masks,
-                                                            **kwargs)
-                    if self.with_pos_coord:
-                        positive_coords.append(roi_losses.pop('pos_coords'))
-                    else: 
-                        if 'pos_coords' in roi_losses.keys():
-                            tmp = roi_losses.pop('pos_coords')     
-                    roi_losses = upd_loss(roi_losses, idx=i)
-                    losses.update(roi_losses)
+            #     positive_coords = []
+            #     for i in range(len(self.roi_head)):
+            #         roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+            #                                                 gt_bboxes, gt_labels,
+            #                                                 gt_bboxes_ignore, gt_masks,
+            #                                                 **kwargs)
+            #         if self.with_pos_coord:
+            #             positive_coords.append(roi_losses.pop('pos_coords'))
+            #         else: 
+            #             if 'pos_coords' in roi_losses.keys():
+            #                 tmp = roi_losses.pop('pos_coords')     
+            #         roi_losses = upd_loss(roi_losses, idx=i)
+            #         losses.update(roi_losses)
                     
-                for i in range(len(self.bbox_head)):
-                    bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
-                                                                gt_labels, gt_bboxes_ignore)
-                    if self.with_pos_coord:
-                        pos_coords = bbox_losses.pop('pos_coords')
-                        positive_coords.append(pos_coords)
-                    else:
-                        if 'pos_coords' in bbox_losses.keys():
-                            tmp = bbox_losses.pop('pos_coords')          
-                    bbox_losses = upd_loss(bbox_losses, idx=i+len(self.roi_head))
-                    losses.update(bbox_losses)
+            #     for i in range(len(self.bbox_head)):
+            #         bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
+            #                                                     gt_labels, gt_bboxes_ignore)
+            #         if self.with_pos_coord:
+            #             pos_coords = bbox_losses.pop('pos_coords')
+            #             positive_coords.append(pos_coords)
+            #         else:
+            #             if 'pos_coords' in bbox_losses.keys():
+            #                 tmp = bbox_losses.pop('pos_coords')          
+            #         bbox_losses = upd_loss(bbox_losses, idx=i+len(self.roi_head))
+            #         losses.update(bbox_losses)
 
-                if self.with_pos_coord and len(positive_coords)>0:
-                    for i in range(len(positive_coords)):
-                        bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
-                                                                    gt_labels, gt_bboxes_ignore, positive_coords[i], i)
-                        bbox_losses = upd_loss(bbox_losses, idx=i)
-                        losses.update(bbox_losses)  
+            #     if self.with_pos_coord and len(positive_coords)>0:
+            #         for i in range(len(positive_coords)):
+            #             bbox_losses = self.query_head.forward_train_aux(x, img_metas, gt_bboxes,
+            #                                                         gt_labels, gt_bboxes_ignore, positive_coords[i], i)
+            #             bbox_losses = upd_loss(bbox_losses, idx=i)
+            #             losses.update(bbox_losses)  
 
-                query_list = self.simple_test_query_head(img, img_metas)
+            #     query_list = self.simple_test_query_head(img, img_metas)
 
-            if self.da_head is not None and self.da_head.GradCAM == True:
+            # if self.da_head is not None and self.da_head.GradCAM == True:
 
-                da_loss = self.da_head(in_da_feat, img_metas)
-                return da_loss
+            #     da_loss = self.da_head(in_da_feat, img_metas)
+            #     return da_loss
 
-            if self.rpn_head.GradCAM == True:
+            # if self.rpn_head.GradCAM == True:
 
-                rpn_loss = self.rpn_head.forward_train(
-                    x,
-                    img_metas,
-                    gt_bboxes,
-                    gt_labels=None,
-                    gt_bboxes_ignore=gt_bboxes_ignore,
-                    proposal_cfg=proposal_cfg,
-                    **kwargs)
-                return rpn_loss[0]['loss_rpn_cls']
+            #     rpn_loss = self.rpn_head.forward_train(
+            #         x,
+            #         img_metas,
+            #         gt_bboxes,
+            #         gt_labels=None,
+            #         gt_bboxes_ignore=gt_bboxes_ignore,
+            #         proposal_cfg=proposal_cfg,
+            #         **kwargs)
+            #     return rpn_loss[0]['loss_rpn_cls']
             
-            if self.roi_head.GradCAM == True:
+            # if self.roi_head.GradCAM == True:
                 
-                for i in range(len(self.roi_head)):
-                    roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
-                                                            gt_bboxes, gt_labels,
-                                                            gt_bboxes_ignore, gt_masks,
-                                                            **kwargs)
-                    if self.with_pos_coord:
-                        positive_coords.append(roi_losses.pop('pos_coords'))
-                    else: 
-                        if 'pos_coords' in roi_losses.keys():
-                            tmp = roi_losses.pop('pos_coords')   
-                    total_loss_tensor = torch.tensor([0.], device='cuda:0')  
-                    for key, value in losses.items():
-                        if 'd4.loss_bbox' in key:
-                            if isinstance(value, list):
-                                value = sum(value)  # Convert scalar tensor to 1-dimensional tensor
-                            total_loss_tensor += value
-                    # print(losses)
-                    # print(total_loss_tensor)
-                    # print("losses[loss_bbox0]",losses["loss_bbox0"])
-                    return total_loss_tensor
+            #     for i in range(len(self.roi_head)):
+            #         roi_losses = self.roi_head[i].forward_train(x, img_metas, proposal_list,
+            #                                                 gt_bboxes, gt_labels,
+            #                                                 gt_bboxes_ignore, gt_masks,
+            #                                                 **kwargs)
+            #         if self.with_pos_coord:
+            #             positive_coords.append(roi_losses.pop('pos_coords'))
+            #         else: 
+            #             if 'pos_coords' in roi_losses.keys():
+            #                 tmp = roi_losses.pop('pos_coords')   
+            #         total_loss_tensor = torch.tensor([0.], device='cuda:0')  
+            #         for key, value in losses.items():
+            #             if 'd4.loss_bbox' in key:
+            #                 if isinstance(value, list):
+            #                     value = sum(value)  # Convert scalar tensor to 1-dimensional tensor
+            #                 total_loss_tensor += value
+            #         # print(losses)
+            #         # print(total_loss_tensor)
+            #         # print("losses[loss_bbox0]",losses["loss_bbox0"])
+            #         return total_loss_tensor
                 
-            if self.bbox_head.GradCAM == True:
-                for i in range(len(self.bbox_head)):
-                    bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
-                                                                gt_labels, gt_bboxes_ignore)
-                    if self.with_pos_coord:
-                        pos_coords = bbox_losses.pop('pos_coords')
-                        positive_coords.append(pos_coords)
-                    else:
-                        if 'pos_coords' in bbox_losses.keys():
-                            tmp = bbox_losses.pop('pos_coords')          
-                    return bbox_losses['loss_cls']
+            # if self.bbox_head.GradCAM == True:
+            #     for i in range(len(self.bbox_head)):
+            #         bbox_losses = self.bbox_head[i].forward_train(x, img_metas, gt_bboxes,
+            #                                                     gt_labels, gt_bboxes_ignore)
+            #         if self.with_pos_coord:
+            #             pos_coords = bbox_losses.pop('pos_coords')
+            #             positive_coords.append(pos_coords)
+            #         else:
+            #             if 'pos_coords' in bbox_losses.keys():
+            #                 tmp = bbox_losses.pop('pos_coords')          
+            #         return bbox_losses['loss_cls']
             
             ret_losses.append(losses)
             
@@ -850,10 +853,10 @@ class CoDETR(BaseDetector):
                     img_metas[i]['img_shape'] = [input_img_h, input_img_w, 3]
             x = self.extract_feat(img, img_metas)
             acc = self.da_head(x, img_metas)
-            if acc is not None:
-                self.logger_n.info(f"acc: {acc}")
-                self.logger_n.info(f"acc: {acc}")
-                self.logger_n.info(f"acc: {acc}")
+            # if acc is not None:
+            #     self.logger_n.info(f"acc: {acc}")
+            #     self.logger_n.info(f"acc: {acc}")
+            #     self.logger_n.info(f"acc: {acc}")
         return self.simple_test_query_head(img, img_metas, proposals, rescale)
 
     def aug_test(self, imgs, img_metas, rescale=False):
