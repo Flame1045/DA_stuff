@@ -266,6 +266,60 @@ class MLP_Adapter_slide8(nn.Module):
         xs = self.act(xs)
         xs = xs.squeeze(0)
 
+        xs = xs.unsqueeze(0)
+        xs = rearrange(xs, 'b h w c -> b c h w')
+        xs, _ , _ = self.silde(xs)
+        xs = rearrange(xs, 'b c h w -> b h w c')
+        xs = xs.squeeze(0)
+
+        # xs = torch.reshape(xs,(1,C,H,W))
+        # xs, _ , _ = self.silde(xs)
+        # xs = torch.reshape(xs,(H,W,C))
+
+
+
+        xs = self.D_fc2(xs)
+
+        if self.skip_connect:
+            x = x + xs
+        else:
+            x = xs
+        return x
+
+class MLP_Adapter_slide8_(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
+        super().__init__()
+        self.skip_connect = skip_connect
+        self.act = act_layer()
+        self.D_fc1 = nn.Linear(input_dim, hidden_dim)
+        self.D_fc2 = nn.Linear(hidden_dim, output_dim)
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        self.conv_A = nn.Conv1d(hidden_dim, 64, 1, groups=1, bias=True) 
+        self.conv_B = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_C = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_D = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_E = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_F = nn.Conv1d(64, 64, 1, groups=1, bias=True)
+        self.conv_G = nn.Conv1d(64, 64, 1, groups=1, bias=True) 
+        self.conv_H = nn.Conv1d(64, hidden_dim, 1, groups=1, bias=True)
+        self.dropout = nn.Dropout(0.1)
+        self.scale = 1
+        self.silde = SlideAttention(dim=hidden_dim, num_heads=8, ka=3).cuda()
+    
+    def forward(self, x):
+
+        xs = self.D_fc1(x)
+        H, W, C = xs.shape # 300 1 64
+        xs = xs.unsqueeze(0)
+        xs = rearrange(xs, 'b h w c -> b c (h w)')
+        xs = self.conv_B(self.dropout(self.conv_A(xs)))
+        xs = self.conv_D(self.dropout(self.conv_C(xs)))
+        xs = self.conv_F(self.dropout(self.conv_E(xs)))
+        xs = self.conv_H(self.dropout(self.conv_G(xs)))*self.scale+xs
+        xs = rearrange(xs, 'b c (h w) -> b h w c', h=H, w=W)
+        xs = self.act(xs)
+        xs = xs.squeeze(0)
+
         xs = torch.reshape(xs,(1,C,H,W))
         xs, _ , _ = self.silde(xs)
         xs = torch.reshape(xs,(H,W,C))
@@ -279,7 +333,6 @@ class MLP_Adapter_slide8(nn.Module):
         else:
             x = xs
         return x
-    
 
 class MLP_Adapter_slide8_nosilde(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5):
@@ -340,10 +393,13 @@ class MLP_Adapter_slide8_nomlp(nn.Module):
     def forward(self, x):
         xs = self.D_fc1(x)
         xs = self.act(xs)
-        H, W, C = xs.shape
-        xs = torch.reshape(xs,(1,C,H,W))
+        # H, W, C = xs.shape
+        # xs = torch.reshape(xs,(1,C,H,W))
+        xs = xs.unsqueeze(0)
+        xs = rearrange(xs, 'b h w c -> b c h w')
         xs, _ , _ = self.silde(xs)
-        xs = torch.reshape(xs,(H,W,C))
+        xs = rearrange(xs, 'b c h w -> b h w c')
+        xs = xs.squeeze(0)
         xs = self.D_fc2(xs)
 
         if self.skip_connect:
@@ -621,6 +677,12 @@ def build_AdapterV2a5x5_slide8(input_dim, hidden_dim, output_dim):
     A_layers.append(MLP_Adapter_slide8(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
     return nn.Sequential(*A_layers)
 
+def build_AdapterV2a5x5_slide8_(input_dim, hidden_dim, output_dim):
+    print("build_AdapterV2a5x5_slide8")
+    A_layers = list()
+    A_layers.append(MLP_Adapter_slide8_(input_dim, hidden_dim, output_dim, act_layer=nn.GELU, skip_connect=True, kernel_size=5))
+    return nn.Sequential(*A_layers)
+
 def build_AdapterV2a5x5_slide8_nosilde(input_dim, hidden_dim, output_dim):
     print("build_AdapterV2a5x5_slide8_nosilde")
     A_layers = list()
@@ -782,6 +844,7 @@ class BaseTransformerLayer_(BaseModule):
                                   'cross_attn_res_adapterV27x7', 
                                   'cross_attn_seq_adapterV25x5', 
                                   'cross_attn_seq_adapterV25x5_slide8', 
+                                  'cross_attn_seq_adapterV25x5_slide8_',
                                   'cross_attn_seq_adapterV25x5_slide', 
                                   'cross_attn_seq_adapterV25x5_slide8_nomlp',
                                   'cross_attn_seq_adapterV25x5_slide8_nosilde', 
@@ -847,6 +910,10 @@ class BaseTransformerLayer_(BaseModule):
 
             if operation_name in ['cross_attn_seq_adapterV25x5_slide8']:
                 self.adapter_att = build_AdapterV2a5x5_slide8(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
+                self.scalar_att = learnable_scalar()
+
+            if operation_name in ['cross_attn_seq_adapterV25x5_slide8_']:
+                self.adapter_att = build_AdapterV2a5x5_slide8_(self.embed_dims, self.embed_dims // 4,self.embed_dims) 
                 self.scalar_att = learnable_scalar()
 
             if operation_name in ['cross_attn_seq_adapterV25x5_slide8_nosilde']:

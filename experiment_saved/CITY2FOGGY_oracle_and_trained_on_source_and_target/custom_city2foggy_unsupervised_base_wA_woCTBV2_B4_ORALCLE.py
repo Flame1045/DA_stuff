@@ -1,178 +1,178 @@
-import math 
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
-classes = ('car','person','bicycle','rider','train','motorcycle','bus','truck')
-epochs = 15 # 15
+classes = ('car', 'person', 'bicycle', 'rider', 'train', 'motorcycle', 'bus',
+           'truck')
+epochs = 30
 batch_size = 4
-target_images = 2975 * 3
-source_images = 2975 * 3
-numbers_of_images = source_images + target_images
-total_iters = int(math.ceil(numbers_of_images / batch_size) * epochs)
-eval_peroid = total_iters // epochs
-saving_peroid = total_iters // epochs
-
+target_images = 8925
+source_images = 8925
+numbers_of_images = 17850
+total_iters = 133890
+eval_peroid = 4463
+saving_peroid = 4463
 data = dict(
-    samples_per_gpu=batch_size,
-    workers_per_gpu=batch_size,
+    samples_per_gpu=4,
+    workers_per_gpu=4,
     persistent_workers=True,
-    train = 
-        [
-            dict(
-                type=dataset_type,
-                ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-                img_prefix='data/coco/City2Foggy_source/train2017/',
-                classes=classes,
-                filter_empty_gt=False,
-                pipeline=[
-                    dict(type='LoadImageFromFile'),
-                    dict(type='LoadAnnotations', with_bbox=True),
-                    dict(
-                        type='Resize',
-                        img_scale=(1024, 1024),
-                        ratio_range=(0.1, 2.0),
-                        multiscale_mode='range',
-                        keep_ratio=True),
-                    dict(
-                        type='RandomCrop',
-                        crop_type='absolute_range',
-                        crop_size=(1024, 1024),
-                        recompute_bbox=True,
-                        allow_negative_crop=True),
-                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
-                    dict(type='RandomFlip', flip_ratio=0.5),
-                    dict(type='Pad',
-                        size=(1024, 1024),
-                        pad_val=dict(img=(114, 114, 114))),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='DefaultFormatBundle'),
-                    dict(
-                        type='Collect',
-                        keys=['img', 'gt_bboxes', 'gt_labels'])
-                ]),
-            dict(
-                type=dataset_type,
-                ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-                img_prefix='data/coco/City2Foggy_source/train2017/',
-                classes=classes,
-                filter_empty_gt=False,
-                pipeline=[
-                    dict(type='LoadImageFromFile'),
-                    dict(type='LoadAnnotations', with_bbox=True),
-                    dict(
-                        type='Resize',
-                        img_scale=(1024, 1024),
-                        ratio_range=(0.1, 2.0),
-                        multiscale_mode='range',
-                        keep_ratio=True),
-                    dict(
-                        type='RandomCrop',
-                        crop_type='absolute_range',
-                        crop_size=(1024, 1024),
-                        recompute_bbox=True,
-                        allow_negative_crop=True),
-                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
-                    dict(type='RandomFlip', flip_ratio=0.5),
-                    dict(type='Pad',
-                        size=(1024, 1024),
-                        pad_val=dict(img=(114, 114, 114))),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='DefaultFormatBundle'),
-                    dict(
-                        type='Collect',
-                        keys=['img', 'gt_bboxes', 'gt_labels'])
-                ]),
-            dict(
-                type=dataset_type,
-                ann_file='data/coco/City2Foggy_source/annotations/instances_train2017.json',
-                img_prefix='data/coco/City2Foggy_source/train2017/',
-                classes=classes,
-                filter_empty_gt=False,
-                pipeline=[
-                    dict(type='LoadImageFromFile'),
-                    dict(type='LoadAnnotations', with_bbox=True),
-                    dict(
-                        type='Resize',
-                        img_scale=(1024, 1024),
-                        ratio_range=(0.1, 2.0),
-                        multiscale_mode='range',
-                        keep_ratio=True),
-                    dict(
-                        type='RandomCrop',
-                        crop_type='absolute_range',
-                        crop_size=(1024, 1024),
-                        recompute_bbox=True,
-                        allow_negative_crop=True),
-                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
-                    dict(type='RandomFlip', flip_ratio=0.5),
-                    dict(type='Pad',
-                        size=(1024, 1024),
-                        pad_val=dict(img=(114, 114, 114))),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='DefaultFormatBundle'),
-                    dict(
-                        type='Collect',
-                        keys=['img', 'gt_bboxes', 'gt_labels'])
-                ]),
-            dict(
-                type=dataset_type,
-                ann_file='data/coco/City2Foggy_target/annotations/train.json',
-                img_prefix='data/coco/City2Foggy_target/train2017/',
-                classes=classes,
-                filter_empty_gt=False,
-                pipeline=[
-                    dict(type='LoadImageFromFile'),
-                    dict(type='LoadAnnotations', with_bbox=True),
-                    dict(
-                        type='Resize',
-                        img_scale=(1024, 1024),
-                        ratio_range=(0.1, 2.0),
-                        multiscale_mode='range',
-                        keep_ratio=True),
-                    dict(
-                        type='RandomCrop',
-                        crop_type='absolute_range',
-                        crop_size=(1024, 1024),
-                        recompute_bbox=True,
-                        allow_negative_crop=True),
-                    dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
-                    dict(type='RandomFlip', flip_ratio=0.5),
-                    dict(type='Pad',
-                        size=(1024, 1024),
-                        pad_val=dict(img=(114, 114, 114))),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='DefaultFormatBundle'),
-                    dict(
-                        type='Collect',
-                        keys=['img', 'gt_bboxes', 'gt_labels'])
+    train=[
+        dict(
+            type='CocoDataset',
+            ann_file=
+            'data/coco/City2Foggy_source/annotations/instances_train2017.json',
+            img_prefix='data/coco/City2Foggy_source/train2017/',
+            classes=('car', 'person', 'bicycle', 'rider', 'train',
+                     'motorcycle', 'bus', 'truck'),
+            filter_empty_gt=False,
+            pipeline=[
+                dict(type='LoadImageFromFile'),
+                dict(type='LoadAnnotations', with_bbox=True),
+                dict(
+                    type='Resize',
+                    img_scale=(1024, 1024),
+                    ratio_range=(0.1, 2.0),
+                    multiscale_mode='range',
+                    keep_ratio=True),
+                dict(
+                    type='RandomCrop',
+                    crop_type='absolute_range',
+                    crop_size=(1024, 1024),
+                    recompute_bbox=True,
+                    allow_negative_crop=True),
+                dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                dict(type='RandomFlip', flip_ratio=0.5),
+                dict(
+                    type='Pad',
+                    size=(1024, 1024),
+                    pad_val=dict(img=(114, 114, 114))),
+                dict(
+                    type='Normalize',
+                    mean=[123.675, 116.28, 103.53],
+                    std=[58.395, 57.12, 57.375],
+                    to_rgb=True),
+                dict(type='DefaultFormatBundle'),
+                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+        dict(
+            type='CocoDataset',
+            ann_file=
+            'data/coco/City2Foggy_source/annotations/instances_train2017.json',
+            img_prefix='data/coco/City2Foggy_source/train2017/',
+            classes=('car', 'person', 'bicycle', 'rider', 'train',
+                     'motorcycle', 'bus', 'truck'),
+            filter_empty_gt=False,
+            pipeline=[
+                dict(type='LoadImageFromFile'),
+                dict(type='LoadAnnotations', with_bbox=True),
+                dict(
+                    type='Resize',
+                    img_scale=(1024, 1024),
+                    ratio_range=(0.1, 2.0),
+                    multiscale_mode='range',
+                    keep_ratio=True),
+                dict(
+                    type='RandomCrop',
+                    crop_type='absolute_range',
+                    crop_size=(1024, 1024),
+                    recompute_bbox=True,
+                    allow_negative_crop=True),
+                dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                dict(type='RandomFlip', flip_ratio=0.5),
+                dict(
+                    type='Pad',
+                    size=(1024, 1024),
+                    pad_val=dict(img=(114, 114, 114))),
+                dict(
+                    type='Normalize',
+                    mean=[123.675, 116.28, 103.53],
+                    std=[58.395, 57.12, 57.375],
+                    to_rgb=True),
+                dict(type='DefaultFormatBundle'),
+                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+        dict(
+            type='CocoDataset',
+            ann_file=
+            'data/coco/City2Foggy_source/annotations/instances_train2017.json',
+            img_prefix='data/coco/City2Foggy_source/train2017/',
+            classes=('car', 'person', 'bicycle', 'rider', 'train',
+                     'motorcycle', 'bus', 'truck'),
+            filter_empty_gt=False,
+            pipeline=[
+                dict(type='LoadImageFromFile'),
+                dict(type='LoadAnnotations', with_bbox=True),
+                dict(
+                    type='Resize',
+                    img_scale=(1024, 1024),
+                    ratio_range=(0.1, 2.0),
+                    multiscale_mode='range',
+                    keep_ratio=True),
+                dict(
+                    type='RandomCrop',
+                    crop_type='absolute_range',
+                    crop_size=(1024, 1024),
+                    recompute_bbox=True,
+                    allow_negative_crop=True),
+                dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                dict(type='RandomFlip', flip_ratio=0.5),
+                dict(
+                    type='Pad',
+                    size=(1024, 1024),
+                    pad_val=dict(img=(114, 114, 114))),
+                dict(
+                    type='Normalize',
+                    mean=[123.675, 116.28, 103.53],
+                    std=[58.395, 57.12, 57.375],
+                    to_rgb=True),
+                dict(type='DefaultFormatBundle'),
+                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+            ]),
+        dict(
+            type='CocoDataset',
+            ann_file='data/coco/City2Foggy_target/annotations/train.json',
+            img_prefix='data/coco/City2Foggy_target/train2017/',
+            classes=('car', 'person', 'bicycle', 'rider', 'train',
+                     'motorcycle', 'bus', 'truck'),
+            filter_empty_gt=False,
+            pipeline=[
+                dict(type='LoadImageFromFile'),
+                dict(type='LoadAnnotations', with_bbox=True),
+                dict(
+                    type='Resize',
+                    img_scale=(1024, 1024),
+                    ratio_range=(0.1, 2.0),
+                    multiscale_mode='range',
+                    keep_ratio=True),
+                dict(
+                    type='RandomCrop',
+                    crop_type='absolute_range',
+                    crop_size=(1024, 1024),
+                    recompute_bbox=True,
+                    allow_negative_crop=True),
+                dict(type='FilterAnnotations', min_gt_bbox_wh=(0.01, 0.01)),
+                dict(type='RandomFlip', flip_ratio=0.5),
+                dict(
+                    type='Pad',
+                    size=(1024, 1024),
+                    pad_val=dict(img=(114, 114, 114))),
+                dict(
+                    type='Normalize',
+                    mean=[123.675, 116.28, 103.53],
+                    std=[58.395, 57.12, 57.375],
+                    to_rgb=True),
+                dict(type='DefaultFormatBundle'),
+                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
             ])
-        ], 
-
+    ],
     val=dict(
-        type=dataset_type,
+        type='CocoDataset',
         ann_file='data/coco/City2Foggy_target/annotations/val_all.json',
         img_prefix='data/coco/City2Foggy_target/val2017/',
-        classes=classes,
+        classes=('car', 'person', 'bicycle', 'rider', 'train', 'motorcycle',
+                 'bus', 'truck'),
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(
                 type='MultiScaleFlipAug',
-                # img_scale=(1333, 800),
                 img_scale=(1024, 1024),
                 flip=False,
                 transforms=[
@@ -187,21 +187,20 @@ data = dict(
                         mean=[123.675, 116.28, 103.53],
                         std=[58.395, 57.12, 57.375],
                         to_rgb=True),
-                    # dict(type='Pad', size_divisor=1),
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
                 ])
         ]),
     test=dict(
-        type=dataset_type,
+        type='CocoDataset',
         ann_file='data/coco/City2Foggy_target/annotations/val_all.json',
         img_prefix='data/coco/City2Foggy_target/val2017/',
-        classes=classes,
+        classes=('car', 'person', 'bicycle', 'rider', 'train', 'motorcycle',
+                 'bus', 'truck'),
         pipeline=[
             dict(type='LoadImageFromFile'),
             dict(
                 type='MultiScaleFlipAug',
-                # img_scale=(1333, 800),
                 img_scale=(1024, 1024),
                 flip=False,
                 transforms=[
@@ -216,20 +215,22 @@ data = dict(
                         mean=[123.675, 116.28, 103.53],
                         std=[58.395, 57.12, 57.375],
                         to_rgb=True),
-                    # dict(type='Pad', size_divisor=1),
                     dict(type='ImageToTensor', keys=['img']),
                     dict(type='Collect', keys=['img'])
                 ])
         ]))
-evaluation = dict(interval=eval_peroid, metric='bbox', classwise=True, iou_thrs=[0.5]) #
-checkpoint_config = dict(interval=saving_peroid, by_epoch=False) #
-log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'), dict(type='TensorboardLoggerHook')])
+evaluation = dict(interval=4463, metric='bbox', classwise=True, iou_thrs=[0.5])
+checkpoint_config = dict(interval=4463, by_epoch=False)
+log_config = dict(
+    interval=50,
+    hooks=[dict(type='TextLoggerHook'),
+           dict(type='TensorboardLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = None
 resume_from = None
-workflow = [('train', eval_peroid)] #
+workflow = [('train', 4463)]
 opencv_num_threads = 0
 mp_start_method = 'fork'
 auto_scale_lr = dict(enable=False, base_batch_size=16)
@@ -289,61 +290,60 @@ model = dict(
                 num_layers=6,
                 transformerlayers=[
                     dict(
-                    type='BaseTransformerLayer', ######
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        dropout=0.0),
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                        type='BaseTransformerLayer',
+                        attn_cfgs=dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0),
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer', ######
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        dropout=0.0),
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                        type='BaseTransformerLayer',
+                        attn_cfgs=dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0),
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer', ######
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        dropout=0.0),
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                        type='BaseTransformerLayer',
+                        attn_cfgs=dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0),
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer', ######
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        dropout=0.0),
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                        type='BaseTransformerLayer',
+                        attn_cfgs=dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0),
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer', ######
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        dropout=0.0),
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
+                        type='BaseTransformerLayer',
+                        attn_cfgs=dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0),
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'ffn', 'norm')),
                     dict(
-                    type='BaseTransformerLayer', ######
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention',
-                        embed_dims=256,
-                        dropout=0.0),
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm')),
-                    ]
-                ),
+                        type='BaseTransformerLayer',
+                        attn_cfgs=dict(
+                            type='MultiScaleDeformableAttention',
+                            embed_dims=256,
+                            dropout=0.0),
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'ffn', 'norm'))
+                ]),
             decoder=dict(
                 type='CoDeformableDetrTransformerDecoder',
                 num_layers=6,
@@ -351,109 +351,108 @@ model = dict(
                 look_forward_twice=True,
                 transformerlayers=[
                     dict(
-                    type='DetrTransformerDecoderLayer', #######
-                    attn_cfgs=[
-                        dict(
-                            type='MultiheadAttention',
-                            embed_dims=256,
-                            num_heads=8,
-                            dropout=0.0),
-                        dict(
-                            type='MultiScaleDeformableAttention',
-                            embed_dims=256,
-                            dropout=0.0)
-                    ],
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')), 
+                        type='DetrTransformerDecoderLayer',
+                        attn_cfgs=[
+                            dict(
+                                type='MultiheadAttention',
+                                embed_dims=256,
+                                num_heads=8,
+                                dropout=0.0),
+                            dict(
+                                type='MultiScaleDeformableAttention',
+                                embed_dims=256,
+                                dropout=0.0)
+                        ],
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'cross_attn',
+                                         'norm', 'ffn', 'norm')),
                     dict(
-                    type='DetrTransformerDecoderLayer', #######
-                    attn_cfgs=[
-                        dict(
-                            type='MultiheadAttention',
-                            embed_dims=256,
-                            num_heads=8,
-                            dropout=0.0),
-                        dict(
-                            type='MultiScaleDeformableAttention',
-                            embed_dims=256,
-                            dropout=0.0)
-                    ],
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')), 
+                        type='DetrTransformerDecoderLayer',
+                        attn_cfgs=[
+                            dict(
+                                type='MultiheadAttention',
+                                embed_dims=256,
+                                num_heads=8,
+                                dropout=0.0),
+                            dict(
+                                type='MultiScaleDeformableAttention',
+                                embed_dims=256,
+                                dropout=0.0)
+                        ],
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'cross_attn',
+                                         'norm', 'ffn', 'norm')),
                     dict(
-                    type='DetrTransformerDecoderLayer', #######
-                    attn_cfgs=[
-                        dict(
-                            type='MultiheadAttention',
-                            embed_dims=256,
-                            num_heads=8,
-                            dropout=0.0),
-                        dict(
-                            type='MultiScaleDeformableAttention',
-                            embed_dims=256,
-                            dropout=0.0)
-                    ],
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')), 
+                        type='DetrTransformerDecoderLayer',
+                        attn_cfgs=[
+                            dict(
+                                type='MultiheadAttention',
+                                embed_dims=256,
+                                num_heads=8,
+                                dropout=0.0),
+                            dict(
+                                type='MultiScaleDeformableAttention',
+                                embed_dims=256,
+                                dropout=0.0)
+                        ],
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'cross_attn',
+                                         'norm', 'ffn', 'norm')),
                     dict(
-                    type='DetrTransformerDecoderLayer', #######
-                    attn_cfgs=[
-                        dict(
-                            type='MultiheadAttention',
-                            embed_dims=256,
-                            num_heads=8,
-                            dropout=0.0),
-                        dict(
-                            type='MultiScaleDeformableAttention',
-                            embed_dims=256,
-                            dropout=0.0)
-                    ],
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')), 
+                        type='DetrTransformerDecoderLayer',
+                        attn_cfgs=[
+                            dict(
+                                type='MultiheadAttention',
+                                embed_dims=256,
+                                num_heads=8,
+                                dropout=0.0),
+                            dict(
+                                type='MultiScaleDeformableAttention',
+                                embed_dims=256,
+                                dropout=0.0)
+                        ],
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'cross_attn',
+                                         'norm', 'ffn', 'norm')),
                     dict(
-                    type='DetrTransformerDecoderLayer', #######
-                    attn_cfgs=[
-                        dict(
-                            type='MultiheadAttention',
-                            embed_dims=256,
-                            num_heads=8,
-                            dropout=0.0),
-                        dict(
-                            type='MultiScaleDeformableAttention',
-                            embed_dims=256,
-                            dropout=0.0)
-                    ],
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')), 
+                        type='DetrTransformerDecoderLayer',
+                        attn_cfgs=[
+                            dict(
+                                type='MultiheadAttention',
+                                embed_dims=256,
+                                num_heads=8,
+                                dropout=0.0),
+                            dict(
+                                type='MultiScaleDeformableAttention',
+                                embed_dims=256,
+                                dropout=0.0)
+                        ],
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'cross_attn',
+                                         'norm', 'ffn', 'norm')),
                     dict(
-                    type='DetrTransformerDecoderLayer', #######
-                    attn_cfgs=[
-                        dict(
-                            type='MultiheadAttention',
-                            embed_dims=256,
-                            num_heads=8,
-                            dropout=0.0),
-                        dict(
-                            type='MultiScaleDeformableAttention',
-                            embed_dims=256,
-                            dropout=0.0)
-                    ],
-                    feedforward_channels=2048,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'cross_attn', 'norm',
-                                     'ffn', 'norm')), 
-                    ]
-                )),
+                        type='DetrTransformerDecoderLayer',
+                        attn_cfgs=[
+                            dict(
+                                type='MultiheadAttention',
+                                embed_dims=256,
+                                num_heads=8,
+                                dropout=0.0),
+                            dict(
+                                type='MultiScaleDeformableAttention',
+                                embed_dims=256,
+                                dropout=0.0)
+                        ],
+                        feedforward_channels=2048,
+                        ffn_dropout=0.0,
+                        operation_order=('self_attn', 'norm', 'cross_attn',
+                                         'norm', 'ffn', 'norm'))
+                ])),
         positional_encoding=dict(
             type='SinePositionalEncoding',
             num_feats=128,
@@ -495,14 +494,6 @@ model = dict(
                     loss_weight=1.2),
                 loss_bbox=dict(type='GIoULoss', loss_weight=12.0)))
     ],
-    # da_head=dict(
-    #     type='DAHead',
-    #     useCTB=False,
-    #     loss=dict(
-    #         type='CrossEntropyLoss',
-    #         use_sigmoid=True,
-    #     ),
-    # ),
     isSAP=False,
     isARoiLoss=False,
     gamma=1.0,
@@ -553,12 +544,7 @@ model = dict(
                     neg_pos_ub=-1,
                     add_gt_as_proposals=True),
                 pos_weight=-1,
-                debug=False)),
-        # dict(
-        #     assigner=dict(type='ATSSAssigner', topk=9),
-        #     allowed_border=-1,
-        #     pos_weight=-1,
-        #     debug=False)
+                debug=False))
     ],
     test_cfg=[
         dict(max_per_img=100),
@@ -590,19 +576,13 @@ optimizer = dict(
             reference_points=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
 lr_config = dict(policy='step', step=[5000])
-# lr_config = dict(
-#     policy='CosineAnnealing',
-#     warmup='linear',
-#     warmup_iters=100,
-#     warmup_ratio=1.0 / 10,
-#     min_lr_ratio=1e-3)
-# runner = dict(type='EpochBasedRunner', max_epochs=12)
-runner = dict(type='IterBasedRunner', max_iters=total_iters) # 
-
-work_dir = 'outputs/DEBUG'
+runner = dict(type='IterBasedRunner', max_iters=133890)
+work_dir = 'outputs/CITY2FOGGY_oracle_and_trained_on_source_and_target'
 adapter = False
 adapter_choose = []
 da_head = False
 grad_cam = False
 auto_resume = False
 gpu_ids = [0]
+pseudo_label_flag = False
+ORACLE = True
