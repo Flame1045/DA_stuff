@@ -65,11 +65,14 @@
 #          model.query_head.transformer.encoder.transformerlayers.5.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')" 
 
 # done
-python3 tools/test.py \
-      experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py \
-      experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/iter_23600.pth --eval bbox --show \
-      --show-score-thr 0.5 \
-      --show-dir experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/visaulization
+
+# python3 tools/test.py experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/iter_23600.pth --eval bbox
+
+# python3 tools/test.py \
+#       experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py \
+#       experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/iter_23600.pth --eval bbox --show \
+#       --show-score-thr 0.5 \
+#       --show-dir experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/visaulization
 
 ######SIM2CITY_with_Dcls
 # CONFIG="experiment_saved/SIM2CITY_with_Dcls/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py"

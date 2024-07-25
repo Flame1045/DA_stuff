@@ -229,7 +229,7 @@ custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = 'pretrained/CITY2FOGGY.pth'
-resume_from = None
+resume_from = 'outputs/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TEST+1/iter_45000.pth'
 workflow = [('train', 100)]
 opencv_num_threads = 0
 mp_start_method = 'fork'
@@ -371,10 +371,9 @@ model = dict(
                         ],
                         feedforward_channels=2048,
                         ffn_dropout=0.0,
-                        operation_order=(
-                            'self_attn',
-                            'cross_attn_seq_adapterV25x5_slide8_',
-                            'norm', 'ffn', 'adapter', 'norm')),
+                        operation_order=('self_attn',
+                                         'cross_attn_seq_adapterV25x5_slide8',
+                                         'norm', 'ffn', 'adapter', 'norm')),
                     dict(
                         type='DetrTransformerDecoderLayer_',
                         attn_cfgs=[
@@ -390,10 +389,9 @@ model = dict(
                         ],
                         feedforward_channels=2048,
                         ffn_dropout=0.0,
-                        operation_order=(
-                            'self_attn',
-                            'cross_attn_seq_adapterV25x5_slide8_',
-                            'norm', 'ffn', 'adapter', 'norm')),
+                        operation_order=('self_attn',
+                                         'cross_attn_seq_adapterV25x5_slide8',
+                                         'norm', 'ffn', 'adapter', 'norm')),
                     dict(
                         type='DetrTransformerDecoderLayer_',
                         attn_cfgs=[
@@ -409,10 +407,9 @@ model = dict(
                         ],
                         feedforward_channels=2048,
                         ffn_dropout=0.0,
-                        operation_order=(
-                            'self_attn',
-                            'cross_attn_seq_adapterV25x5_slide8_',
-                            'norm', 'ffn', 'adapter', 'norm')),
+                        operation_order=('self_attn',
+                                         'cross_attn_seq_adapterV25x5_slide8',
+                                         'norm', 'ffn', 'adapter', 'norm')),
                     dict(
                         type='DetrTransformerDecoderLayer_',
                         attn_cfgs=[
@@ -428,10 +425,9 @@ model = dict(
                         ],
                         feedforward_channels=2048,
                         ffn_dropout=0.0,
-                        operation_order=(
-                            'self_attn',
-                            'cross_attn_seq_adapterV25x5_slide8_',
-                            'norm', 'ffn', 'adapter', 'norm')),
+                        operation_order=('self_attn',
+                                         'cross_attn_seq_adapterV25x5_slide8',
+                                         'norm', 'ffn', 'adapter', 'norm')),
                     dict(
                         type='DetrTransformerDecoderLayer_',
                         attn_cfgs=[
@@ -447,10 +443,9 @@ model = dict(
                         ],
                         feedforward_channels=2048,
                         ffn_dropout=0.0,
-                        operation_order=(
-                            'self_attn',
-                            'cross_attn_seq_adapterV25x5_slide8_',
-                            'norm', 'ffn', 'adapter', 'norm')),
+                        operation_order=('self_attn',
+                                         'cross_attn_seq_adapterV25x5_slide8',
+                                         'norm', 'ffn', 'adapter', 'norm')),
                     dict(
                         type='DetrTransformerDecoderLayer_',
                         attn_cfgs=[
@@ -466,10 +461,9 @@ model = dict(
                         ],
                         feedforward_channels=2048,
                         ffn_dropout=0.0,
-                        operation_order=(
-                            'self_attn',
-                            'cross_attn_seq_adapterV25x5_slide8_',
-                            'norm', 'ffn', 'adapter', 'norm'))
+                        operation_order=('self_attn',
+                                         'cross_attn_seq_adapterV25x5_slide8',
+                                         'norm', 'ffn', 'adapter', 'norm'))
                 ])),
         positional_encoding=dict(
             type='SinePositionalEncoding',
@@ -593,9 +587,9 @@ optimizer = dict(
             sampling_offsets=dict(lr_mult=0.1),
             reference_points=dict(lr_mult=0.1))))
 optimizer_config = dict(grad_clip=dict(max_norm=0.1, norm_type=2))
-lr_config = dict(policy='step', step=[5000])
+lr_config = dict(policy='step', step=[5000, 44000])
 runner = dict(type='IterBasedRunner', max_iters=66945)
-work_dir = 'outputs/BASE_WA_Test81+1'
+work_dir = 'outputs/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TEST+1'
 adapter = True
 adapter_choose = [
     'slideatten', 'SAP', 'adapter', 'scalar', 'da_head', 'cls_branches',
@@ -606,3 +600,4 @@ grad_cam = False
 auto_resume = False
 gpu_ids = [0]
 pseudo_label_flag = False
+ORACLE = False

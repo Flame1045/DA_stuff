@@ -163,7 +163,7 @@ outputs/
 data/
 DEBUG/
 text.log
-experiment_saved/
+# experiment_saved/
 *.zip
 *.jpg
 *.png
