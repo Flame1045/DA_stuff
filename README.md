@@ -93,7 +93,7 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 **System Requirements:**
 
 * **Python**: `version 3.7.11`
-* **Python**: `NVIDIA GeForce RTX 3090 Ti`
+* **GPU**: `NVIDIA GeForce RTX 3090 Ti`
 
 ###  [ Installation](#-installation)
 
@@ -124,7 +124,12 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 > ```
 
 4. Install pretrained weight:
-Download pretrained weight from here: and extract and merge files in experiment_saved.
+Cilck  <a href="https://drive.google.com/file/d/1ezCc0LeGXj_7uTVBLKknJWufHAQt0TGL/view?usp=sharing" download>
+  <button style="background-color: #4CAF50; border: none; color: white; padding: 5px 5px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">
+    Here
+  </button>
+</a>
+ to download and extract and merge files in experiment_saved.
 It will looks like the structure below 
 ```sh
 └── DA_stuff/
@@ -235,7 +240,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                 | Summary                         |
 | ---                                                                                                                                                                  | ---                             |
-| [custom_sim2city_base.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_baseline_and_pretrained_on_source/custom_sim2city_base.py) | <code>SIM2CITY pretrained on source</code> |
+| [custom_sim2city_base.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/SIM2CITY_baseline_and_pretrained_on_source/custom_sim2city_base.py) | <code>SIM2CITY pretrained on source</code> |
 
 </details>
 
@@ -243,7 +248,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                               | Summary                         |
 | ---                                                                                                                                                                                                | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with domain classifier</code> |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/SIM2CITY_with_Dcls/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with domain classifier</code> |
 
 </details>
 
@@ -251,7 +256,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                 | Summary                         |
 | ---                                                                                                                                                                                                                  | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with spatail attention</code> |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/SIM2CITY_with_Dcls_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with spatail attention</code> |
 
 </details>
 
@@ -260,7 +265,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                              | Summary                         |
 | ---                                                                                                                                                                                                               | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_channel_mixing/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with channel communication</code> |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/SIM2CITY_with_Dcls_channel_mixing/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with channel communication</code> |
 
 </details>
 
@@ -268,7 +273,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                                | Summary                         |
 | ---                                                                                                                                                                                                                                 | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with channel communication and spatail attention</code> |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with channel communication and spatail attention</code> |
 
 </details>
 
@@ -276,7 +281,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                                             | Summary                         |
 | ---                                                                                                                                                                                                                                              | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_oracle_and_trained_on_source_and_target/custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>SIM2CITY oralcle</code> |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/SIM2CITY_oracle_and_trained_on_source_and_target/custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>SIM2CITY oralcle</code> |
 
 </details>
 
@@ -284,7 +289,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                       | Summary                         |
 | ---                                                                                                                                                                        | ---                             |
-| [custom_city2foggy_base.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_baseline_and_pretrained_on_source/custom_city2foggy_base.py) | <code>CITY2FOGGY pretrained on source</code> |
+| [custom_city2foggy_base.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/CITY2FOGGY_baseline_and_pretrained_on_source/custom_city2foggy_base.py) | <code>CITY2FOGGY pretrained on source</code> |
 
 </details>
 
@@ -292,7 +297,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                     | Summary                         |
 | ---                                                                                                                                                                                                      | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with domain classifier</code> |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/CITY2FOGGY_with_Dcls/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with domain classifier</code> |
 
 </details>
 
@@ -300,7 +305,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                       | Summary                         |
 | ---                                                                                                                                                                                                                        | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with spatail attention</code> |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/CITY2FOGGY_with_Dcls_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with spatail attention</code> |
 
 </details>
 
@@ -308,7 +313,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                    | Summary                         |
 | ---                                                                                                                                                                                                                     | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with channel communication</code> |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with channel communication</code> |
 
 </details>
 
@@ -316,7 +321,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                                      | Summary                         |
 | ---                                                                                                                                                                                                                                       | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with channel communication and spatail attention</code> |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with channel communication and spatail attention</code> |
 
 </details>
 
@@ -324,7 +329,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 | File                                                                                                                                                                                                                                                   | Summary                         |
 | ---                                                                                                                                                                                                                                                    | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>CITY2FOGGY oralcle</code> |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff/tree/main/experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>CITY2FOGGY oralcle</code> |
 
 </details>
 
