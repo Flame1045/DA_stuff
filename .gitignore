@@ -165,7 +165,7 @@ DEBUG/
 text.log
 # experiment_saved/
 *.zip
-*.jpg
+.jpg
 *.png
 *.pth
 *.mp4

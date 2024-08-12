@@ -2,20 +2,20 @@
   <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" width="100" alt="project-logo">
 </p>
 <p align="center">
-    <h1 align="center">DA_STUFF</h1>
+    <h1 align="center">Officail Code for "Efficient Transfer Learning with Spatial Attention and Channel Communication for Unsupervised Domain Adaptation in Object Detection"</h1>
 </p>
-<p align="center">
+<!-- <p align="center">
     <em><code>► INSERT-TEXT-HERE</code></em>
-</p>
-<p align="center">
+</p> -->
+<!-- <p align="center">
 	<img src="https://img.shields.io/github/license/Flame1045/DA_stuff.git?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
 	<img src="https://img.shields.io/github/last-commit/Flame1045/DA_stuff.git?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
 	<img src="https://img.shields.io/github/languages/top/Flame1045/DA_stuff.git?style=default&color=0080ff" alt="repo-top-language">
 	<img src="https://img.shields.io/github/languages/count/Flame1045/DA_stuff.git?style=default&color=0080ff" alt="repo-language-count">
-<p>
-<p align="center">
+<p> -->
+<!-- <p align="center"> -->
 	<!-- default option, no dependency badges. -->
-</p>
+<!-- </p> -->
 
 <br><!-- TABLE OF CONTENTS -->
 <details>
