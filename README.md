@@ -28,7 +28,6 @@
   - [ Installation](#-installation)
   - [ Dataset preparation](#-installation)
   - [ Usage](#-usage)
-  - [ Tests](#-tests)
 - [ Config dDetails](#-modules)
 <!-- - [ Project Roadmap](#-project-roadmap)
 - [ Contributing](#-contributing)
@@ -52,7 +51,7 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 
 ---
 
-##  Repository Structure
+##  [ Repository Structure](#-repository-structure)
 
 ```sh
 └── DA_stuff/
@@ -88,14 +87,14 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 
 ```
 
-##  Getting Started
+##  [ Getting Started](#-getting-started)
 
 **System Requirements:**
 
 * **Python**: `version 3.7.11`
 * **Python**: `NVIDIA GeForce RTX 3090 Ti`
 
-###  Installation
+###  [ Installation](#-installation)
 
 > 1. Clone the DA_stuff repository:
 >
@@ -123,9 +122,9 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 > $ pip3 install natten==0.14.6+torch1110cu113 -f https://shi-labs.com/natten/wheels
 > ```
 
-### Dataset preparation
+### [ Dataset preparation](#-installation)
 
-###  Usage
+###  [ Usage](#-usage)
 
 <h4>Evaluation on <code>CITY2FOGGY</code></h4>
 We provide six different experimental setups for evaluating the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
@@ -197,7 +196,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 ---
 
-##  Config Details
+##  [ Config dDetails](#-modules)
 
 <details closed><summary>experiment_saved.SIM2CITY_baseline_and_pretrained_on_source</summary>
 
@@ -298,7 +297,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 ---
 
-##  Acknowledgments
+##  [ Acknowledgments](#-acknowledgments)
 
 - [SAPNetV2](https://github.com/Shuntw6096/SAPNetV2)
 - Professor Wen-Hsien Fang and Professor Yie-Tarng Chen
