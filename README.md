@@ -22,29 +22,32 @@
   <summary>Table of Contents</summary><br>
 
 - [ Overview](#-overview)
-- [ Features](#-features)
+<!-- - [ Features](#-features) -->
 - [ Repository Structure](#-repository-structure)
-- [ Modules](#-modules)
 - [ Getting Started](#-getting-started)
   - [ Installation](#-installation)
+  - [ Dataset preparation](#-installation)
   - [ Usage](#-usage)
   - [ Tests](#-tests)
-- [ Project Roadmap](#-project-roadmap)
+- [ Config dDetails](#-modules)
+<!-- - [ Project Roadmap](#-project-roadmap)
 - [ Contributing](#-contributing)
-- [ License](#-license)
+- [ License](#-license) -->
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
 
 ##  Overview
 
-<code>► INSERT-TEXT-HERE</code>
+#### Code release for the paper:
 
----
+<img src=figures/PrpoArch.jpg>
 
-##  Features
+#### Overview of our proposed architecture, which is based on DeformableDETR. The FG Adapter, depicted in the orange dotted box, is integrated into both the encoder and decoder of Deformable-DETR, while the CS Adapter, shown in the red dotted box, is only in the decoder. The domain classifier, indicated by the purple dotted box, is placed after the decoder. 
 
-<code>► INSERT-TEXT-HERE</code>
+<!-- ##  Features
+
+<code>► INSERT-TEXT-HERE</code> -->
 
 ---
 
@@ -53,8 +56,6 @@
 ```sh
 └── DA_stuff/
     ├── README.md
-    ├── environment.yml
-    ├── envsetup.txt
     ├── experiment_saved
     │   ├── CITY2FOGGY_baseline_and_pretrained_on_source
     │   ├── CITY2FOGGY_oracle_and_trained_on_source_and_target
@@ -75,158 +76,16 @@
     │   ├── __init__.py
     │   ├── configs
     │   └── models
+            ├── co_detr.py 
+            └── _transformer.py
     ├── requirements.txt
     └── tools
-        ├── analysis_tools
-        ├── count_each.py
-        ├── dataset_converters
-        ├── deployment
-        ├── dist_test.sh
-        ├── dist_train.sh
-        ├── experiment_CITY2FOGGY.sh
-        ├── experiment_SIMCITY.sh
-        ├── experiment_old.sh
-        ├── imgs2video.py
-        ├── misc
-        ├── model_converters
-        ├── multi.sh
-        ├── multi_2.sh
-        ├── multi_3.sh
-        ├── multi_C2F.sh
-        ├── multi_C2F_2.sh
-        ├── multi_C2F_3.sh
-        ├── multi_C2F_4.sh
-        ├── resume.sh
-        ├── slurm_test.sh
-        ├── slurm_train.sh
-        ├── test.py
-        ├── test.sh
         ├── train.py
-        ├── train_Dcls.sh
-        └── train_adapter.sh
+        ├── experiment_CITY2FOGGY.sh
+        └── experiment_SIMCITY.sh
+
+
 ```
-
----
-
-##  Modules
-
-
-<details closed><summary>experiment_saved.SIM2CITY_oracle_and_trained_on_source_and_target</summary>
-
-| File                                                                                                                                                                                                                                             | Summary                         |
-| ---                                                                                                                                                                                                                                              | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_oracle_and_trained_on_source_and_target/custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.SIM2CITY_with_Dcls_channel_mixing_spatail_attention</summary>
-
-| File                                                                                                                                                                                                                                | Summary                         |
-| ---                                                                                                                                                                                                                                 | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention</summary>
-
-| File                                                                                                                                                                                                                                      | Summary                         |
-| ---                                                                                                                                                                                                                                       | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls_channel_mixing</summary>
-
-| File                                                                                                                                                                                                                    | Summary                         |
-| ---                                                                                                                                                                                                                     | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls_spatail_attention</summary>
-
-| File                                                                                                                                                                                                                       | Summary                         |
-| ---                                                                                                                                                                                                                        | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.CITY2FOGGY_oracle_and_trained_on_source_and_target</summary>
-
-| File                                                                                                                                                                                                                                                   | Summary                         |
-| ---                                                                                                                                                                                                                                                    | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.SIM2CITY_baseline_and_pretrained_on_source</summary>
-
-| File                                                                                                                                                                 | Summary                         |
-| ---                                                                                                                                                                  | ---                             |
-| [custom_sim2city_base.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_baseline_and_pretrained_on_source/custom_sim2city_base.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.SIM2CITY_with_Dcls_channel_mixing</summary>
-
-| File                                                                                                                                                                                                              | Summary                         |
-| ---                                                                                                                                                                                                               | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_channel_mixing/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.CITY2FOGGY_baseline_and_pretrained_on_source</summary>
-
-| File                                                                                                                                                                       | Summary                         |
-| ---                                                                                                                                                                        | ---                             |
-| [custom_city2foggy_base.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_baseline_and_pretrained_on_source/custom_city2foggy_base.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.SIM2CITY_with_Dcls_spatail_attention</summary>
-
-| File                                                                                                                                                                                                                 | Summary                         |
-| ---                                                                                                                                                                                                                  | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls</summary>
-
-| File                                                                                                                                                                                                     | Summary                         |
-| ---                                                                                                                                                                                                      | ---                             |
-| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>experiment_saved.SIM2CITY_with_Dcls</summary>
-
-| File                                                                                                                                                                                               | Summary                         |
-| ---                                                                                                                                                                                                | ---                             |
-| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
-
-<details closed><summary>projects.models</summary>
-
-| File                                                                                                                           | Summary                         |
-| ---                                                                                                                            | ---                             |
-| [co_deformable_detr_head.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/co_deformable_detr_head.py) | <code>► INSERT-TEXT-HERE</code> |
-| [co_dino_head.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/co_dino_head.py)                       | <code>► INSERT-TEXT-HERE</code> |
-| [co_detr.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/co_detr.py)                                 | <code>► INSERT-TEXT-HERE</code> |
-| [test.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/test.py)                                       | <code>► INSERT-TEXT-HERE</code> |
-| [_transformer.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/_transformer.py)                       | <code>► INSERT-TEXT-HERE</code> |
-| [query_denoising.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/query_denoising.py)                 | <code>► INSERT-TEXT-HERE</code> |
-| [distillation.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/distillation.py)                       | <code>► INSERT-TEXT-HERE</code> |
-| [slide_attention.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/slide_attention.py)                 | <code>► INSERT-TEXT-HERE</code> |
-| [co_atss_head.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/co_atss_head.py)                       | <code>► INSERT-TEXT-HERE</code> |
-| [sapnet.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/sapnet.py)                                   | <code>► INSERT-TEXT-HERE</code> |
-| [da_head.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/da_head.py)                                 | <code>► INSERT-TEXT-HERE</code> |
-| [co_roi_head.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/co_roi_head.py)                         | <code>► INSERT-TEXT-HERE</code> |
-| [transformer.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/transformer.py)                         | <code>► INSERT-TEXT-HERE</code> |
-| [swin_transformer.py](https://github.com/Flame1045/DA_stuff.git/blob/master/projects/models/swin_transformer.py)               | <code>► INSERT-TEXT-HERE</code> |
-
-</details>
 
 ##  Getting Started
 
@@ -237,8 +96,6 @@
 
 ###  Installation
 
-<h4>From <code>source</code></h4>
-
 > 1. Clone the DA_stuff repository:
 >
 > ```console
@@ -248,7 +105,6 @@
 > 2. Change to the project directory:
 > ```console
 > $ cd DA_stuff
-
 > ```
 
 > 3. Install the dependencies:
@@ -266,86 +122,185 @@
 > $ pip3 install natten==0.14.6+torch1110cu113 -f https://shi-labs.com/natten/wheels
 > ```
 
+### Dataset preparation
+
 ###  Usage
 
-<h4>From <code>source</code></h4>
+<h4>Evaluation on <code>CITY2FOGGY</code></h4>
+We provide six different experimental setups for evaluating the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
 
-> Run DA_stuff using the command below:
+The available experiments are:
+- **CITY2FOGGY_baseline_and_pretrained_on_source**
+- **CITY2FOGGY_oracle_and_trained_on_source_and_target**
+- **CITY2FOGGY_with_Dcls_channel_mixing_spatial_attention**
+- **CITY2FOGGY_with_Dcls**
+- **CITY2FOGGY_with_Dcls_channel_mixing**
+- **CITY2FOGGY_with_Dcls_spatial_attention**
+
+To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in the desired experiment in the script and run the following command:
+
 > ```console
-> $ python main.py
+> $  bash tools/experiment_CITY2FOGGY.sh 
 > ```
 
-###  Tests
+<h4>Evaluation on <code>SIMCITY</code></h4>
+We provide six different experimental setups for evaluating the model on the SIMCITY task. These setups are included in the script `tools/experiment_SIMCITY.sh`.
 
-> Run the test suite using the command below:
+The available experiments are:
+- **SIMCITY_baseline_and_pretrained_on_source**
+- **SIMCITY_oracle_and_trained_on_source_and_target**
+- **SIMCITY_with_Dcls_channel_mixing_spatial_attention**
+- **SIMCITY_with_Dcls**
+- **SIMCITY_with_Dcls_channel_mixing**
+- **SIMCITY_with_Dcls_spatial_attention**
+
+To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) the desired experiment in the script and run the following command:
+
 > ```console
-> $ pytest
+> $  bash tools/experiment_SIMCITY.sh 
+> ```
+
+<h4>Training on <code>CITY2FOGGY</code></h4>
+We provide six different experimental setups for training the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
+
+The available experiments are:
+- **CITY2FOGGY_baseline_and_pretrained_on_source**
+- **CITY2FOGGY_oracle_and_trained_on_source_and_target**
+- **CITY2FOGGY_with_Dcls_channel_mixing_spatial_attention**
+- **CITY2FOGGY_with_Dcls**
+- **CITY2FOGGY_with_Dcls_channel_mixing**
+- **CITY2FOGGY_with_Dcls_spatial_attention**
+
+To train a specific experiment, uncomment (# CONFIG= ... to # done) in the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_CITY2FOGGY.sh 
+> ```
+
+<h4>Training on <code>SIMCITY</code></h4>
+We provide six different experimental setups for training the model on the SIMCITY task. These setups are included in the script `tools/experiment_SIMCITY.sh`.
+
+The available experiments are:
+- **SIMCITY_baseline_and_pretrained_on_source**
+- **SIMCITY_oracle_and_trained_on_source_and_target**
+- **SIMCITY_with_Dcls_channel_mixing_spatial_attention**
+- **SIMCITY_with_Dcls**
+- **SIMCITY_with_Dcls_channel_mixing**
+- **SIMCITY_with_Dcls_spatial_attention**
+
+To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_SIMCITY.sh 
 > ```
 
 ---
 
-##  Project Roadmap
+##  Config Details
 
-- [X] `► INSERT-TASK-1`
-- [ ] `► INSERT-TASK-2`
-- [ ] `► ...`
+<details closed><summary>experiment_saved.SIM2CITY_baseline_and_pretrained_on_source</summary>
 
----
+| File                                                                                                                                                                 | Summary                         |
+| ---                                                                                                                                                                  | ---                             |
+| [custom_sim2city_base.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_baseline_and_pretrained_on_source/custom_sim2city_base.py) | <code>SIM2CITY pretrained on source</code> |
 
-##  Contributing
-
-Contributions are welcome! Here are several ways you can contribute:
-
-- **[Report Issues](https://github.com/Flame1045/DA_stuff.git/issues)**: Submit bugs found or log feature requests for the `DA_stuff` project.
-- **[Submit Pull Requests](https://github.com/Flame1045/DA_stuff.git/blob/main/CONTRIBUTING.md)**: Review open PRs, and submit your own PRs.
-- **[Join the Discussions](https://github.com/Flame1045/DA_stuff.git/discussions)**: Share your insights, provide feedback, or ask questions.
-
-<details closed>
-<summary>Contributing Guidelines</summary>
-
-1. **Fork the Repository**: Start by forking the project repository to your github account.
-2. **Clone Locally**: Clone the forked repository to your local machine using a git client.
-   ```sh
-   git clone https://github.com/Flame1045/DA_stuff.git
-   ```
-3. **Create a New Branch**: Always work on a new branch, giving it a descriptive name.
-   ```sh
-   git checkout -b new-feature-x
-   ```
-4. **Make Your Changes**: Develop and test your changes locally.
-5. **Commit Your Changes**: Commit with a clear message describing your updates.
-   ```sh
-   git commit -m 'Implemented new feature x.'
-   ```
-6. **Push to github**: Push the changes to your forked repository.
-   ```sh
-   git push origin new-feature-x
-   ```
-7. **Submit a Pull Request**: Create a PR against the original project repository. Clearly describe the changes and their motivations.
-8. **Review**: Once your PR is reviewed and approved, it will be merged into the main branch. Congratulations on your contribution!
 </details>
 
-<details closed>
-<summary>Contributor Graph</summary>
-<br>
-<p align="center">
-   <a href="https://github.com{/Flame1045/DA_stuff.git/}graphs/contributors">
-      <img src="https://contrib.rocks/image?repo=Flame1045/DA_stuff.git">
-   </a>
-</p>
+<details closed><summary>experiment_saved.SIM2CITY_with_Dcls</summary>
+
+| File                                                                                                                                                                                               | Summary                         |
+| ---                                                                                                                                                                                                | ---                             |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with domain classifier</code> |
+
 </details>
 
----
+<details closed><summary>experiment_saved.SIM2CITY_with_Dcls_spatail_attention</summary>
 
-##  License
+| File                                                                                                                                                                                                                 | Summary                         |
+| ---                                                                                                                                                                                                                  | ---                             |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with spatail attention</code> |
 
-This project is protected under the [SELECT-A-LICENSE](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
+</details>
+
+
+<details closed><summary>experiment_saved.SIM2CITY_with_Dcls_channel_mixing</summary>
+
+| File                                                                                                                                                                                                              | Summary                         |
+| ---                                                                                                                                                                                                               | ---                             |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_channel_mixing/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with channel communication</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.SIM2CITY_with_Dcls_channel_mixing_spatail_attention</summary>
+
+| File                                                                                                                                                                                                                                | Summary                         |
+| ---                                                                                                                                                                                                                                 | ---                             |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_with_Dcls_channel_mixing_spatail_attention/custom_sim2city_unsupervised_base_wA_woCTBV2_B4.py) | <code>SIM2CITY with channel communication and spatail attention</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.SIM2CITY_oracle_and_trained_on_source_and_target</summary>
+
+| File                                                                                                                                                                                                                                             | Summary                         |
+| ---                                                                                                                                                                                                                                              | ---                             |
+| [custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/SIM2CITY_oracle_and_trained_on_source_and_target/custom_sim2city_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>SIM2CITY oralcle</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.CITY2FOGGY_baseline_and_pretrained_on_source</summary>
+
+| File                                                                                                                                                                       | Summary                         |
+| ---                                                                                                                                                                        | ---                             |
+| [custom_city2foggy_base.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_baseline_and_pretrained_on_source/custom_city2foggy_base.py) | <code>CITY2FOGGY pretrained on source</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls</summary>
+
+| File                                                                                                                                                                                                     | Summary                         |
+| ---                                                                                                                                                                                                      | ---                             |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with domain classifier</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls_spatail_attention</summary>
+
+| File                                                                                                                                                                                                                       | Summary                         |
+| ---                                                                                                                                                                                                                        | ---                             |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with spatail attention</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls_channel_mixing</summary>
+
+| File                                                                                                                                                                                                                    | Summary                         |
+| ---                                                                                                                                                                                                                     | ---                             |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with channel communication</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention</summary>
+
+| File                                                                                                                                                                                                                                      | Summary                         |
+| ---                                                                                                                                                                                                                                       | ---                             |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py) | <code>CITY2FOGGY with channel communication and spatail attention</code> |
+
+</details>
+
+<details closed><summary>experiment_saved.CITY2FOGGY_oracle_and_trained_on_source_and_target</summary>
+
+| File                                                                                                                                                                                                                                                   | Summary                         |
+| ---                                                                                                                                                                                                                                                    | ---                             |
+| [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>CITY2FOGGY oralcle</code> |
+
+</details>
 
 ---
 
 ##  Acknowledgments
 
-- List any resources, contributors, inspiration, etc. here.
+- [SAPNetV2](https://github.com/Shuntw6096/SAPNetV2)
+- Professor Wen-Hsien Fang and Professor Yie-Tarng Chen
 
 [**Return**](#-overview)
 
