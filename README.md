@@ -28,7 +28,7 @@
   - [ Installation](#-installation)
   - [ Dataset preparation](#-installation)
   - [ Usage](#-usage)
-- [ Config dDetails](#-modules)
+- [ Config Details](#-Details)
 <!-- - [ Project Roadmap](#-project-roadmap)
 - [ Contributing](#-contributing)
 - [ License](#-license) -->
@@ -123,6 +123,9 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 > ```
 
 ### [ Dataset preparation](#-installation)
+Download SIM10k, CITYSCAPES, FOGGY CITYSCAPES from its offical website, convert it to COCO format. 
+Make a 
+
 
 ###  [ Usage](#-usage)
 
@@ -196,7 +199,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 ---
 
-##  [ Config dDetails](#-modules)
+##  [ Config Details](#-Details)
 
 <details closed><summary>experiment_saved.SIM2CITY_baseline_and_pretrained_on_source</summary>
 

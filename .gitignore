@@ -163,7 +163,9 @@ outputs/
 data/
 DEBUG/
 text.log
-# experiment_saved/
+demo/
+docker/
+docs/
 *.zip
 .jpg
 *.png
