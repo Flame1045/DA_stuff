@@ -124,12 +124,7 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 > ```
 
 4. Install pretrained weight:
-Cilck  <a href="https://drive.google.com/file/d/1ezCc0LeGXj_7uTVBLKknJWufHAQt0TGL/view?usp=sharing" download>
-  <button style="background-color: #4CAF50; border: none; color: white; padding: 5px 5px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">
-    Here
-  </button>
-</a>
- to download and extract and merge files in experiment_saved.
+Cilck here: https://drive.google.com/file/d/1ezCc0LeGXj_7uTVBLKknJWufHAQt0TGL/view?usp=sharing to download and extract and merge files in experiment_saved.
 It will looks like the structure below 
 ```sh
 └── DA_stuff/
