@@ -1,6 +1,6 @@
-<p align="center">
+<!-- <p align="center">
   <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" width="100" alt="project-logo">
-</p>
+</p> -->
 <p align="center">
     <h1 align="center">Officail Code for "Efficient Transfer Learning with Spatial Attention and Channel Communication for Unsupervised Domain Adaptation in Object Detection"</h1>
 </p>
@@ -37,13 +37,14 @@
 </details>
 <hr>
 
-##  Overview
+## [ Overview](#-overview)
 
-#### Code release for the paper:
+
+#### Code release for the paper: https://drive.google.com/file/d/19ZY15MAgTQxjjQTUtHEn1vZDbd18qiny/view?usp=sharing
 
 <img src=figures/PrpoArch.jpg>
 
-#### Overview of our proposed architecture, which is based on DeformableDETR. The FG Adapter, depicted in the orange dotted box, is integrated into both the encoder and decoder of Deformable-DETR, while the CS Adapter, shown in the red dotted box, is only in the decoder. The domain classifier, indicated by the purple dotted box, is placed after the decoder. 
+Overview of our proposed architecture, which is based on DeformableDETR. The FG Adapter, depicted in the orange dotted box, is integrated into both the encoder and decoder of Deformable-DETR, while the CS Adapter, shown in the red dotted box, is only in the decoder. The domain classifier, indicated by the purple dotted box, is placed after the decoder. 
 
 <!-- ##  Features
 
