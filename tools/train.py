@@ -43,12 +43,17 @@ def parse_args():
         '--pseudo_label_flag', 
         action='store_true',
         default=False,
-        help='da_head')
+        help='')
     parser.add_argument(
         '--ORACLE', 
         action='store_true',
         default=False,
-        help='da_head')
+        help='add ORACLE')
+    parser.add_argument(
+        '--TINY_GT_LABEL', 
+        action='store_true',
+        default=False,
+        help='add TINY_GT_LABEL')
     parser.add_argument(
         '--grad_cam', 
         action='store_true',
@@ -193,6 +198,8 @@ def main():
         cfg.pseudo_label_flag = args.pseudo_label_flag
     if args.ORACLE is not None:
         cfg.ORACLE = args.ORACLE
+    if args.TINY_GT_LABEL is not None:
+        cfg.TINY_GT_LABEL = args.TINY_GT_LABEL
     cfg.auto_resume = args.auto_resume
     if args.gpus is not None:
         cfg.gpu_ids = range(1)
@@ -276,6 +283,7 @@ def main():
 
     model.pseudo_label_flag = cfg.pseudo_label_flag
     model.ORACLE = cfg.ORACLE
+    model.TINY_GT_LABEL = cfg.TINY_GT_LABEL
 
 
     if cfg.adapter:

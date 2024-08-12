@@ -243,6 +243,7 @@ class CoDETR(BaseDetector):
 
         self.imgs_feats_name = []
         self.imgs_feats = []
+        self.count = 0
 
     @property
     def with_rpn(self):
@@ -333,6 +334,7 @@ class CoDETR(BaseDetector):
         input_domain = []
         count = 0
         total_count = 0
+        self.count = self.count + 1
         b_size = len(img_)
         sap_size = 2
         for i in range(0,len(img_)):
@@ -380,33 +382,38 @@ class CoDETR(BaseDetector):
             if self.ORACLE:
                 gt_bboxes_ignore_Flag = False
 
+            if self.TINY_GT_LABEL:
+                if self.count % 100 == 0: # 1 percent of GT labels
+                    gt_bboxes_ignore_Flag = False
+                    self.logger_n.info(img_meta["filename"])
+
             # if img_metas[0]["ori_filename"][-4:] != img_metas[1]["ori_filename"][-4:]:
             #     assert print("~~~~~~~~",img_metas[0]["ori_filename"], img_metas[1]["ori_filename"])
             # DETR encoder and decoder forward
 
-            if Pseudo_label_flag and gt_bboxes_ignore_Flag:
-                dir = "/home/ee4012/Eric/new/Vary-toy/Vary-master/filter_GT/"
-                gt_bboxes = []
-                gt_labels = []
-                for img_m in img_metas:
-                    filename = img_m['filename'].split('/')[-1].replace('.png','.txt')
-                    filename = dir + filename
-                    with open(filename, "r") as file:
-                        lines = file.readlines()
-                    # Extract values after the word "car" from each line
-                    pgtbbox = []
-                    pgtlable = []
-                    for line in lines:
-                        if "car" in line:
-                            pgtbbox.append(list(map(float, line.strip().split()[1:])))
-                            pgtlable.extend([0])
-                    # Convert the list of values to a tensor with size [2, 4]
-                    pgtbbox = torch.tensor(pgtbbox).to("cuda:0")
-                    gt_bboxes.append(pgtbbox)
-                    pgtlable = torch.tensor(pgtlable).to("cuda:0")
-                    gt_labels.append(pgtlable)
-                    if not pgtlable.numel()==0:
-                        gt_bboxes_ignore_Flag = False
+            # if Pseudo_label_flag and gt_bboxes_ignore_Flag:
+            #     dir = "/home/ee4012/Eric/new/Vary-toy/Vary-master/filter_GT/"
+            #     gt_bboxes = []
+            #     gt_labels = []
+            #     for img_m in img_metas:
+            #         filename = img_m['filename'].split('/')[-1].replace('.png','.txt')
+            #         filename = dir + filename
+            #         with open(filename, "r") as file:
+            #             lines = file.readlines()
+            #         # Extract values after the word "car" from each line
+            #         pgtbbox = []
+            #         pgtlable = []
+            #         for line in lines:
+            #             if "car" in line:
+            #                 pgtbbox.append(list(map(float, line.strip().split()[1:])))
+            #                 pgtlable.extend([0])
+            #         # Convert the list of values to a tensor with size [2, 4]
+            #         pgtbbox = torch.tensor(pgtbbox).to("cuda:0")
+            #         gt_bboxes.append(pgtbbox)
+            #         pgtlable = torch.tensor(pgtlable).to("cuda:0")
+            #         gt_labels.append(pgtlable)
+            #         if not pgtlable.numel()==0:
+            #             gt_bboxes_ignore_Flag = False
 
             #         print("filename:", filename)
             # print("gt_bboxes:", gt_bboxes)
@@ -922,37 +929,37 @@ class CoDETR(BaseDetector):
 
         return det_bboxes, det_labels
     
-def Grad_Cam(model, img):
-    from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
-    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-    from pytorch_grad_cam.utils.image import show_cam_on_image
+# def Grad_Cam(model, img):
+#     from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+#     from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+#     from pytorch_grad_cam.utils.image import show_cam_on_image
 
-    # model = resnet50(pretrained=True)
-    target_layers = [model.da_head.conv3]
-    input_tensor = img
-    # Create an input tensor image for your model..
-    # Note: input_tensor can be a batch tensor with several images!
+#     # model = resnet50(pretrained=True)
+#     target_layers = [model.da_head.conv3]
+#     input_tensor = img
+#     # Create an input tensor image for your model..
+#     # Note: input_tensor can be a batch tensor with several images!
 
-    # Construct the CAM object once, and then re-use it on many images:
-    cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
+#     # Construct the CAM object once, and then re-use it on many images:
+#     cam = GradCAM(model=model, target_layers=target_layers, use_cuda=True)
 
-    # You can also use it within a with statement, to make sure it is freed,
-    # In case you need to re-create it inside an outer loop:
-    # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
-    #   ...
+#     # You can also use it within a with statement, to make sure it is freed,
+#     # In case you need to re-create it inside an outer loop:
+#     # with GradCAM(model=model, target_layers=target_layers, use_cuda=args.use_cuda) as cam:
+#     #   ...
 
-    # We have to specify the target we want to generate
-    # the Class Activation Maps for.
-    # If targets is None, the highest scoring category
-    # will be used for every image in the batch.
-    # Here we use ClassifierOutputTarget, but you can define your own custom targets
-    # That are, for example, combinations of categories, or specific outputs in a non standard model.
+#     # We have to specify the target we want to generate
+#     # the Class Activation Maps for.
+#     # If targets is None, the highest scoring category
+#     # will be used for every image in the batch.
+#     # Here we use ClassifierOutputTarget, but you can define your own custom targets
+#     # That are, for example, combinations of categories, or specific outputs in a non standard model.
 
-    targets = [ClassifierOutputTarget(1)]
+#     targets = [ClassifierOutputTarget(1)]
 
-    # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
-    grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
+#     # You can also pass aug_smooth=True and eigen_smooth=True, to apply smoothing.
+#     grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
 
-    # In this example grayscale_cam has only one image in the batch:
-    grayscale_cam = grayscale_cam[0, :]
-    visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True) 
+#     # In this example grayscale_cam has only one image in the batch:
+#     grayscale_cam = grayscale_cam[0, :]
+#     visualization = show_cam_on_image(img, grayscale_cam, use_rgb=True) 

@@ -229,7 +229,7 @@ custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = 'pretrained/CITY2FOGGY.pth'
-resume_from = 'outputs/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TEST+1/iter_45000.pth'
+resume_from = None
 workflow = [('train', 100)]
 opencv_num_threads = 0
 mp_start_method = 'fork'

@@ -172,3 +172,37 @@
 
 # done
 # python3 tools/test.py experiment_saved/CITY2FOGGY_with_Dcls_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py experiment_saved/CITY2FOGGY_with_Dcls_spatail_attention/iter_20600.pth --eval bbox
+
+
+######CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL
+CONFIG="experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4.py"
+PORT=${PORT:-29500}
+PYTHONPATH="$(dirname $0)/..":$PYTHONPATH
+echo $PYTHONPATH
+# Define the learning rates as an array
+LR_VALUES=(0.001)
+
+for ((i=1; i<=1; i++)); do
+      WORKDIR="outputs/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL"
+      # Choose LR sequentially from the array using the loop index
+      LR=${LR_VALUES[$i - 1]}  # Subtracting 1 because array index starts from 0
+      echo "Running iteration $i with WORKDIR=$WORKDIR"
+      python3 $(dirname "$0")/train.py $CONFIG --work-dir $WORKDIR --deterministic \
+         --adapter --adapter_choose slideatten SAP adapter scalar da_head cls_branches reg_branches label_embedding rpn_head roi_head bbox_head \
+         --TINY_GT_LABEL \
+         --load-from "experiment_saved/CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention/pretrained/CITY2FOGGY.pth" --seed 134084244 \
+         --cfg-options optimizer.lr="$LR" \
+         model.query_head.transformer.decoder.transformerlayers.0.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.0.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.decoder.transformerlayers.1.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.1.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.decoder.transformerlayers.2.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.2.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.decoder.transformerlayers.3.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.3.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.decoder.transformerlayers.4.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.4.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.decoder.transformerlayers.5.operation_order="('self_attn', 'cross_attn_seq_adapterV25x5_slide8', 'norm', 'ffn', 'adapter', 'norm')" \
+         model.query_head.transformer.encoder.transformerlayers.5.operation_order="('self_attn', 'norm', 'ffn', 'adapter', 'norm')"
+
+done

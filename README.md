@@ -32,6 +32,7 @@
 <!-- - [ Project Roadmap](#-project-roadmap)
 - [ Contributing](#-contributing)
 - [ License](#-license) -->
+- [ Future work](#-Future)
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
@@ -96,18 +97,17 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 
 ###  [ Installation](#-installation)
 
-> 1. Clone the DA_stuff repository:
->
+1. Clone the DA_stuff repository:
 > ```console
 > $ git clone https://github.com/Flame1045/DA_stuff.git
 > ```
->
-> 2. Change to the project directory:
+
+2. Change to the project directory:
 > ```console
 > $ cd DA_stuff
 > ```
 
-> 3. Install the dependencies:
+3. Install the dependencies:
 > ```console
 > $ conda create -n your_repo_name python==3.7.11 -y
 > $ conda activate your_repo_name
@@ -120,6 +120,24 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 > $ pip install fairscale
 > $ pip install timm
 > $ pip3 install natten==0.14.6+torch1110cu113 -f https://shi-labs.com/natten/wheels
+> $ pip install tensorboard
+> ```
+
+4. Install pretrained weight:
+Download pretrained weight from here: and extract and merge files in experiment_saved.
+It will looks like the structure below 
+```sh
+└── DA_stuff/
+    ├── experiment_saved
+        ├── pretrained
+            └── XXX.pth
+        └── XXX.pth
+    ...
+
+```
+
+> ```console
+> $ git clone https://github.com/Flame1045/DA_stuff.git
 > ```
 
 ### [ Dataset preparation](#-installation)
@@ -135,6 +153,8 @@ Make directory "./data/" and put dataset in below sturcture.
             └──  SIM2Real_target     # CITYSCAPES dataset
 
 ```
+
+
 
 
 ###  [ Usage](#-usage)
@@ -307,6 +327,12 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 | [custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py](https://github.com/Flame1045/DA_stuff.git/blob/master/experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py) | <code>CITY2FOGGY oralcle</code> |
 
 </details>
+
+---
+
+
+- [ Future work](#-Future)
+
 
 ---
 
