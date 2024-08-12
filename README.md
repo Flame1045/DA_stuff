@@ -124,7 +124,17 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
 
 ### [ Dataset preparation](#-installation)
 Download SIM10k, CITYSCAPES, FOGGY CITYSCAPES from its offical website, convert it to COCO format. 
-Make a 
+Make directory "./data/" and put dataset in below sturcture.
+```sh
+└── DA_stuff/
+    ├── data
+        └── coco
+            ├──  City2Foggy_source # CITYSCAPES dataset
+            ├──  City2Foggy_target # FOGGY CITYSCAPES dataset
+            ├──  SIM2Real_source     # SIM10k dataset
+            └──  SIM2Real_target     # CITYSCAPES dataset
+
+```
 
 
 ###  [ Usage](#-usage)
