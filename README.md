@@ -247,11 +247,22 @@
 > 2. Change to the project directory:
 > ```console
 > $ cd DA_stuff
+
 > ```
->
+
 > 3. Install the dependencies:
 > ```console
+> $ conda create -n your_repo_name python==3.7.11 -y
+> $ conda activate your_repo_name
+> $ conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 cudatoolkit=11.3 -c pytorch -y
 > $ pip install -r requirements.txt
+> $ pip install -U openmim
+> $ mim install mmengine
+> $ pip install mmcv-full==1.5.0 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10.0/index.html 
+> $ pip install -v -e .
+> $ pip install fairscale
+> $ pip install timm
+> $ pip3 install natten==0.14.6+torch1110cu113 -f https://shi-labs.com/natten/wheels
 > ```
 
 ###  Usage
