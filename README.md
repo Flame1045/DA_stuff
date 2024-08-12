@@ -331,7 +331,21 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 ---
 
 
-- [ Future work](#-Future)
+## [ Future work](#-Future)
+We add number of percent of target domain label in our proposed method to see if the adapter really need label to fine tune.
+
+### Results of Sim10k (Ds) → Foggy Cityscapes (Dt):
+
+| Percent of target domain label  |   AP         |
+|---------------------|------------------------------------|
+| 0 %  | 57.7 |
+| 1 %  | XX.X |
+
+### Results of Cityscapes (Ds) → Foggy Cityscapes (Dt)
+| Percent of target domain label  |  person | rider | car | truck | bus | train | motorcycle | bicycle | mAP |
+|--------------|-------|---|---|----|----|-------|---|--------|----|
+| 0 %  | 42.7 | 48.5 | 56.8 | 32.7 | 47.0 | 32.5 | 33.0 | 42.6 | 42.0 |
+| 1 %  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  |
 
 
 ---
