@@ -232,7 +232,8 @@
 
 **System Requirements:**
 
-* **Python**: `version x.y.z`
+* **Python**: `version 3.7.11`
+* **Python**: `NVIDIA GeForce RTX 3090 Ti`
 
 ###  Installation
 
