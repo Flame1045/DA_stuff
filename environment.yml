@@ -1,4 +1,4 @@
-name: CO-DA
+name: DA_REPO
 channels:
   - pytorch
   - defaults
