@@ -83,7 +83,7 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
     └── tools
         ├── train.py
         ├── experiment_CITY2FOGGY.sh
-        └── experiment_SIMCITY.sh
+        └── experiment_SIM2CITY.sh
 
 
 ```
@@ -177,21 +177,21 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in th
 > $  bash tools/experiment_CITY2FOGGY.sh 
 > ```
 
-<h4>Evaluation on <code>SIMCITY</code></h4>
-We provide six different experimental setups for evaluating the model on the SIMCITY task. These setups are included in the script `tools/experiment_SIMCITY.sh`.
+<h4>Evaluation on <code>SIM2CITY</code></h4>
+We provide six different experimental setups for evaluating the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
 
 The available experiments are:
-- **SIMCITY_baseline_and_pretrained_on_source**
-- **SIMCITY_oracle_and_trained_on_source_and_target**
-- **SIMCITY_with_Dcls_channel_mixing_spatial_attention**
-- **SIMCITY_with_Dcls**
-- **SIMCITY_with_Dcls_channel_mixing**
-- **SIMCITY_with_Dcls_spatial_attention**
+- **SIM2CITY_baseline_and_pretrained_on_source**
+- **SIM2CITY_oracle_and_trained_on_source_and_target**
+- **SIM2CITY_with_Dcls_channel_mixing_spatial_attention**
+- **SIM2CITY_with_Dcls**
+- **SIM2CITY_with_Dcls_channel_mixing**
+- **SIM2CITY_with_Dcls_spatial_attention**
 
 To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) the desired experiment in the script and run the following command:
 
 > ```console
-> $  bash tools/experiment_SIMCITY.sh 
+> $  bash tools/experiment_SIM2CITY.sh 
 > ```
 
 <h4>Training on <code>CITY2FOGGY</code></h4>
@@ -211,21 +211,21 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) in the desir
 > $  bash tools/experiment_CITY2FOGGY.sh 
 > ```
 
-<h4>Training on <code>SIMCITY</code></h4>
-We provide six different experimental setups for training the model on the SIMCITY task. These setups are included in the script `tools/experiment_SIMCITY.sh`.
+<h4>Training on <code>SIM2CITY</code></h4>
+We provide six different experimental setups for training the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
 
 The available experiments are:
-- **SIMCITY_baseline_and_pretrained_on_source**
-- **SIMCITY_oracle_and_trained_on_source_and_target**
-- **SIMCITY_with_Dcls_channel_mixing_spatial_attention**
-- **SIMCITY_with_Dcls**
-- **SIMCITY_with_Dcls_channel_mixing**
-- **SIMCITY_with_Dcls_spatial_attention**
+- **SIM2CITY_baseline_and_pretrained_on_source**
+- **SIM2CITY_oracle_and_trained_on_source_and_target**
+- **SIM2CITY_with_Dcls_channel_mixing_spatial_attention**
+- **SIM2CITY_with_Dcls**
+- **SIM2CITY_with_Dcls_channel_mixing**
+- **SIM2CITY_with_Dcls_spatial_attention**
 
 To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired experiment in the script and run the following command:
 
 > ```console
-> $  bash tools/experiment_SIMCITY.sh 
+> $  bash tools/experiment_SIM2CITY.sh 
 > ```
 
 ---
@@ -346,7 +346,7 @@ We add number of percent of target domain label in our proposed method to see if
 | Percent of target domain label  |  person | rider | car | truck | bus | train | motorcycle | bicycle | mAP |
 |--------------|-------|---|---|----|----|-------|---|--------|----|
 | 0 %  | 42.7 | 48.5 | 56.8 | 32.7 | 47.0 | 32.5 | 33.0 | 42.6 | 42.0 |
-| 1 %  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  | XX.X  |
+| 1 %  | 44.2  | 50.4  | 62.7  | 32.6  | 46.8  | 34.9  | 33.3  | 42.6  | 43.4  |
 
 
 ---
