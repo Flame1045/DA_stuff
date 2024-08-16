@@ -30,7 +30,8 @@
 - [ Config Details](#-config-details)
 - [ Future work](#-future-work)
   - [ Pretrained Weight Preparation](#-pretrained-weight-preparation)
-  - [ Future Work Usage](#-future-work-usage)
+  - [ Tiny Percentage of Target Domain label Experiments](#-tiny-percentage-of-target-domain-label-experiments)
+  - [ Self-training Strategy Implement Thoughts](#-self-training-strategy-implement-thoughts)
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
@@ -340,7 +341,9 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 
 ## [ Future Work](#-future)
-We incorporate a percentage of target domain labels into our proposed method to evaluate whether the adapter requires labeled data for effective fine-tuning in domain adaptation.
+We incorporate two additional experiments: 
+1. A tiny percentage of target domain labels is used in our proposed method to evaluate whether the adapter requires labeled data for effective fine-tuning in domain adaptation. 
+2. We explore a self-training strategy to assess whether the model can improve unsupervised domain adaptation with an enhanced training approach.
 
 ### [ Pretrained Weight Preparation](#-Pretrained)
 Cilck here https://drive.google.com/file/d/1Wst2HzzjMkm4ryjZTI-GEl_RUDbo6FC9/view?usp=sharing to download and extract in experiment_saved_future_work.
@@ -356,7 +359,7 @@ It will looks like the structure below
 
 ```
 
-###  [ Future Work Usage](#-fusage)
+###  [ Tiny Percentage of Target Domain label Experiments](#-tiny-percentage-of-target-domain-label-experiments)
 
 <h4>Evaluation on <code>CITY2FOGGY</code></h4>
 We provide one experimental setup for evaluating the model on the CITY2FOGGY task. This is included in the script `tools/experiment_CITY2FOGGY.sh`.
@@ -424,6 +427,8 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 > $  bash tools/experiment_SIM2CITY.sh 
 > ```
 
+
+###  [ Self-training Strategy Implement Thoughts](#-self-training-strategy-implement-thoughts)
 
 ---
 
