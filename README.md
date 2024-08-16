@@ -34,6 +34,7 @@
 - [ License](#-license) -->
 - [ Future work](#-Future)
   - [ Pretrained Weight Preparation](#-Pretrained)
+  - [ Future Work Usage](#-Fusage)
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
@@ -71,6 +72,9 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
     │   ├── SIM2CITY_with_Dcls_channel_mixing
     │   ├── SIM2CITY_with_Dcls_channel_mixing_spatail_attention
     │   └── SIM2CITY_with_Dcls_spatail_attention
+    ├── experiment_saved_future_work
+    │   ├── CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL
+    │   └── SIM2CITY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL
     ├── figures
     │   ├── framework.png
     │   └── performance.png
