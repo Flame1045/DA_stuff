@@ -33,6 +33,7 @@
 - [ Contributing](#-contributing)
 - [ License](#-license) -->
 - [ Future work](#-Future)
+  - [ Pretrained Weight Preparation](#-Pretrained)
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
@@ -130,9 +131,12 @@ It will looks like the structure below
 ```sh
 └── DA_stuff/
     ├── experiment_saved
-        ├── pretrained
-            └── XXX.pth
-        └── XXX.pth
+        ├── [Experiment_name]
+            ├── pretrained
+                └── XXX.pth # saved pretrained weight
+            ├── XXX.log # log
+            ├── XXX.py # config
+            └── XXX.pth # saved experiment weight
     ...
 
 ```
@@ -176,6 +180,7 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in th
 > ```console
 > $  bash tools/experiment_CITY2FOGGY.sh 
 > ```
+--------------
 
 <h4>Evaluation on <code>SIM2CITY</code></h4>
 We provide six different experimental setups for evaluating the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
@@ -193,6 +198,7 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) the d
 > ```console
 > $  bash tools/experiment_SIM2CITY.sh 
 > ```
+--------------
 
 <h4>Training on <code>CITY2FOGGY</code></h4>
 We provide six different experimental setups for training the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
@@ -210,6 +216,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) in the desir
 > ```console
 > $  bash tools/experiment_CITY2FOGGY.sh 
 > ```
+--------------
 
 <h4>Training on <code>SIM2CITY</code></h4>
 We provide six different experimental setups for training the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
@@ -332,21 +339,90 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 ---
 
 
-## [ Future work](#-Future)
-We add number of percent of target domain label in our proposed method to see if the adapter really need label to fine tune.
+## [ Future Work](#-Future)
+We incorporate a percentage of target domain labels into our proposed method to evaluate whether the adapter requires labeled data for effective fine-tuning in domain adaptation.
 
-### Results of Sim10k (Ds) → Foggy Cityscapes (Dt):
+### [ Pretrained Weight Preparation](#-Pretrained)
+Cilck here https://drive.google.com/file/d/1Wst2HzzjMkm4ryjZTI-GEl_RUDbo6FC9/view?usp=sharing to download and extract in experiment_saved_future_work.
+It will looks like the structure below 
+```sh
+└── DA_stuff/
+    ├── experiment_saved_future_work
+        ├── [Experiment_name]
+            ├── XXX.log # log
+            ├── XXX.py # config
+            └── XXX.pth # saved experiment weight
+    ...
 
-| Percent of target domain label  |   AP         |
-|---------------------|------------------------------------|
-| 0 %  | 57.7 |
-| 1 %  | XX.X |
+```
 
-### Results of Cityscapes (Ds) → Foggy Cityscapes (Dt)
+###  [ Future Work Usage](#-Fusage)
+
+<h4>Evaluation on <code>CITY2FOGGY</code></h4>
+We provide one experimental setup for evaluating the model on the CITY2FOGGY task. This is included in the script `tools/experiment_CITY2FOGGY.sh`.
+
+The available experiments are:
+- **CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL**
+
+To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_CITY2FOGGY.sh 
+> ```
+
+#### Results of Cityscapes (Ds) → Foggy Cityscapes (Dt)
 | Percent of target domain label  |  person | rider | car | truck | bus | train | motorcycle | bicycle | mAP |
 |--------------|-------|---|---|----|----|-------|---|--------|----|
 | 0 %  | 42.7 | 48.5 | 56.8 | 32.7 | 47.0 | 32.5 | 33.0 | 42.6 | 42.0 |
 | 1 %  | 44.2  | 50.4  | 62.7  | 32.6  | 46.8  | 34.9  | 33.3  | 42.6  | 43.4  |
+
+--------------
+
+<h4>Evaluation on <code>SIM2CITY</code></h4>
+We provide one experimental setup for evaluating the model on the CITY2FOGGY task. This is included in the script `tools/experiment_SIM2CITY.sh`.
+
+The available experiments are:
+- **SIM2CITY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL**
+
+To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_SIM2CITY.sh 
+> ```
+
+#### Results of Sim10k (Ds) → Foggy Cityscapes (Dt):
+
+| Percent of target domain label  |   AP         |
+|---------------------|------------------------------------|
+| 0 %  | 57.7 |
+| 1 %  | 64.8|
+
+--------------
+
+<h4>Training on <code>CITY2FOGGY</code></h4>
+We provide one experimental setup for training the model on the CITY2FOGGY task. This is included in the script `tools/experiment_CITY2FOGGY.sh`.
+
+The available experiments are:
+- **CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL**
+
+To train a specific experiment, uncomment (# CONFIG= ... to # done) in the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_CITY2FOGGY.sh 
+> ```
+--------------
+
+<h4>Training on <code>SIM2CITY</code></h4>
+We provide one experimental setup for training the model on the CITY2FOGGY task. This is included in the script `tools/experiment_SIM2CITY.sh`.
+
+The available experiments are:
+- **SIM2CITY_with_Dcls_channel_mixing_spatail_attention_TINY_GT_LABEL**
+
+To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_SIM2CITY.sh 
+> ```
 
 
 ---
