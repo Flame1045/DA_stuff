@@ -22,19 +22,15 @@
   <summary>Table of Contents</summary><br>
 
 - [ Overview](#-overview)
-<!-- - [ Features](#-features) -->
 - [ Repository Structure](#-repository-structure)
 - [ Getting Started](#-getting-started)
   - [ Installation](#-installation)
-  - [ Dataset preparation](#-installation)
+  - [ Dataset preparation](#-dataset)
   - [ Usage](#-usage)
-- [ Config Details](#-Details)
-<!-- - [ Project Roadmap](#-project-roadmap)
-- [ Contributing](#-contributing)
-- [ License](#-license) -->
-- [ Future work](#-Future)
-  - [ Pretrained Weight Preparation](#-Pretrained)
-  - [ Future Work Usage](#-Fusage)
+- [ Config Details](#-details)
+- [ Future work](#-future)
+  - [ Pretrained Weight Preparation](#-pretrained)
+  - [ Future Work Usage](#-fusage)
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
@@ -149,7 +145,7 @@ It will looks like the structure below
 > $ git clone https://github.com/Flame1045/DA_stuff.git
 > ```
 
-### [ Dataset preparation](#-installation)
+### [ Dataset preparation](#-dataset)
 Download SIM10k, CITYSCAPES, FOGGY CITYSCAPES from its offical website, convert it to COCO format. 
 Make directory "./data/" and put dataset in below sturcture.
 ```sh
@@ -241,7 +237,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 ---
 
-##  [ Config Details](#-Details)
+##  [ Config Details](#-details)
 
 <details closed><summary>experiment_saved.SIM2CITY_baseline_and_pretrained_on_source</summary>
 
@@ -343,7 +339,7 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 ---
 
 
-## [ Future Work](#-Future)
+## [ Future Work](#-future)
 We incorporate a percentage of target domain labels into our proposed method to evaluate whether the adapter requires labeled data for effective fine-tuning in domain adaptation.
 
 ### [ Pretrained Weight Preparation](#-Pretrained)
@@ -360,7 +356,7 @@ It will looks like the structure below
 
 ```
 
-###  [ Future Work Usage](#-Fusage)
+###  [ Future Work Usage](#-fusage)
 
 <h4>Evaluation on <code>CITY2FOGGY</code></h4>
 We provide one experimental setup for evaluating the model on the CITY2FOGGY task. This is included in the script `tools/experiment_CITY2FOGGY.sh`.
