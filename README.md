@@ -430,6 +430,44 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 ###  [ Self-training Strategy Implement Thoughts](#-self-training-strategy-implement-thoughts)
 
+#### Guidelines for Converting This Code to Self-Training
+
+##### Step 1: Understand the Current Codebase
+- **Identify Key Components**:
+  - Locate the discriminator and generator/feature extractor (found in `projects/models/da_head.py` at line 113).
+  - Review how adversarial loss is computed and integrated (see `projects/models/da_head.py` at line 70).
+
+- **Analyze Data Flow**:
+  - Trace how source and target domain data are handled (refer to the config file for each experiment).
+
+##### Step 2: Remove Adversarial Components
+- **Discriminator Removal**:
+  - Remove the discriminator network and related loss computations.
+
+- **Feature Extractor Adjustment**:
+  - Detach the feature extractor from any adversarial dependencies.
+
+##### Step 3: Implement Pseudo-Labeling
+- **Generate Pseudo-Labels**:
+  - Mask target data according to the MIC paper (https://arxiv.org/abs/2212.01322).
+  - Use the Student networks to predict target domain labels, including confidence scores.
+
+- **Filter Pseudo-Labels**:
+  - Apply a confidence threshold to filter pseudo-labels for training, as outlined in the MIC (https://arxiv.org/abs/2212.01322) paper.
+
+- **Assign Pseudo-Labels**:
+  - Store the filtered pseudo-labels for training purposes.
+
+##### Step 4: Modify the Training Loop
+- **Combine Data**:
+  - Mix labeled source data with pseudo-labeled target data in the data loader.
+  - Use the Teacher networks to generate predicted target labels.
+
+- **Update Loss Function**:
+  - Modify the loss function to calculate the loss between predicted target labels and pseudo-labels. This loss is used to update the Student networks.
+  - Update the Teacher networks using EMA, as described in the MIC (https://arxiv.org/abs/2212.01322) paper.
+
+
 ---
 
 ##  [ Acknowledgments](#-acknowledgments)
