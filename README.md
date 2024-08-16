@@ -25,12 +25,12 @@
 - [ Repository Structure](#-repository-structure)
 - [ Getting Started](#-getting-started)
   - [ Installation](#-installation)
-  - [ Dataset preparation](#-dataset)
+  - [ Dataset preparation](#-dataset-preparation)
   - [ Usage](#-usage)
-- [ Config Details](#-details)
-- [ Future work](#-future)
-  - [ Pretrained Weight Preparation](#-pretrained)
-  - [ Future Work Usage](#-fusage)
+- [ Config Details](#-config-details)
+- [ Future work](#-future-work)
+  - [ Pretrained Weight Preparation](#-pretrained-weight-preparation)
+  - [ Future Work Usage](#-future-work-usage)
 - [ Acknowledgments](#-acknowledgments)
 </details>
 <hr>
