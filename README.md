@@ -393,7 +393,7 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in th
 > $  bash tools/experiment_SIM2CITY.sh 
 > ```
 
-#### Results of Sim10k (Ds) → Foggy Cityscapes (Dt):
+#### Results of Sim10k (Ds) → Foggy Cityscapes (Dt)
 
 | Percent of target domain label  |   AP         |
 |---------------------|------------------------------------|
