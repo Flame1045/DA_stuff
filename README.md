@@ -478,6 +478,8 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 ##  [ Acknowledgments](#-acknowledgments)
 
 - [SAPNetV2](https://github.com/Shuntw6096/SAPNetV2)
+- [MMdetection](https://github.com/open-mmlab/mmdetection)
+- [NATTEN](https://github.com/SHI-Labs/NATTEN)
 - Professor Wen-Hsien Fang and Professor Yie-Tarng Chen
 
 [**Return**](#-overview)
