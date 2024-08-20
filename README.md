@@ -286,7 +286,7 @@ To visualize specific experiment, add below in script behind python3 tools/test.
 > ```
 --------------
 
-<h4>Evaluation on & Visualization<code>SIM2CITY</code></h4>
+<h4>Evaluation on & Visualization on <code>SIM2CITY</code></h4>
 We provide six different experimental setups for evaluating the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
 
 The available experiments are:
