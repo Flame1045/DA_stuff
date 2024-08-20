@@ -282,7 +282,7 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in th
 > ```
 To visualize specific experiment, add below in script behind python3 tools/test.py ... --eval bbox
 > ```
-? --show --show-score-thr 0.5 --show-dir your_output_dir
+> --show --show-score-thr 0.5 --show-dir your_output_dir
 > ```
 --------------
 
