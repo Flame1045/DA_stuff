@@ -29,7 +29,7 @@
 #         --ORACLE \
 #         --seed 129094272 
 
-# python3 tools/test.py experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py experiment_saved/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE/iter_120501.pth --eval bbox
+# python3 tools/test.py experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/custom_city2foggy_unsupervised_base_wA_woCTBV2_B4_ORALCLE.py experiment_saved/CITY2FOGGY_oracle_and_trained_on_source_and_target/iter_120501.pth --eval bbox
 
 
 ######CITY2FOGGY_with_Dcls_channel_mixing_spatail_attention
