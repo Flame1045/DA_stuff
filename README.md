@@ -264,7 +264,7 @@ Make directory "./data/" and put dataset in below sturcture.
 
 ###  [ Usage](#-usage)
 
-<h4>Evaluation on <code>CITY2FOGGY</code></h4>
+<h4>Evaluation & Visualization on <code>CITY2FOGGY</code></h4>
 We provide six different experimental setups for evaluating the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
 
 The available experiments are:
@@ -280,9 +280,13 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in th
 > ```console
 > $  bash tools/experiment_CITY2FOGGY.sh 
 > ```
+To visualize specific experiment, add below in script behind python3 tools/test.py ... --eval bbox
+> ```
+--show --show-score-thr 0.5 --show-dir your_output_dir
+> ```
 --------------
 
-<h4>Evaluation on <code>SIM2CITY</code></h4>
+<h4>Evaluation on & Visualization<code>SIM2CITY</code></h4>
 We provide six different experimental setups for evaluating the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
 
 The available experiments are:
@@ -297,6 +301,10 @@ To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) the d
 
 > ```console
 > $  bash tools/experiment_SIM2CITY.sh 
+> ```
+To visualize specific experiment, add below in script behind python3 tools/test.py ... --eval bbox
+> ```
+--show --show-score-thr 0.5 --show-dir your_output_dir
 > ```
 --------------
 
