@@ -27,7 +27,7 @@
   - [ Installation](#-installation)
   - [ Dataset preparation](#-dataset-preparation)
   - [ Usage](#-usage)
-- [ Config Details](#-config-details)
+  - [ Config Details](#-config-details)
 - [ Future work](#-future-work)
   - [ Pretrained Weight Preparation](#-pretrained-weight-preparation)
   - [ Tiny Percentage of Target Domain label Experiments](#-tiny-percentage-of-target-domain-label-experiments)
@@ -160,85 +160,7 @@ Make directory "./data/" and put dataset in below sturcture.
 
 ```
 
-
-
-
-###  [ Usage](#-usage)
-
-<h4>Evaluation on <code>CITY2FOGGY</code></h4>
-We provide six different experimental setups for evaluating the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
-
-The available experiments are:
-- **CITY2FOGGY_baseline_and_pretrained_on_source**
-- **CITY2FOGGY_oracle_and_trained_on_source_and_target**
-- **CITY2FOGGY_with_Dcls_channel_mixing_spatial_attention**
-- **CITY2FOGGY_with_Dcls**
-- **CITY2FOGGY_with_Dcls_channel_mixing**
-- **CITY2FOGGY_with_Dcls_spatial_attention**
-
-To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in the desired experiment in the script and run the following command:
-
-> ```console
-> $  bash tools/experiment_CITY2FOGGY.sh 
-> ```
---------------
-
-<h4>Evaluation on <code>SIM2CITY</code></h4>
-We provide six different experimental setups for evaluating the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
-
-The available experiments are:
-- **SIM2CITY_baseline_and_pretrained_on_source**
-- **SIM2CITY_oracle_and_trained_on_source_and_target**
-- **SIM2CITY_with_Dcls_channel_mixing_spatial_attention**
-- **SIM2CITY_with_Dcls**
-- **SIM2CITY_with_Dcls_channel_mixing**
-- **SIM2CITY_with_Dcls_spatial_attention**
-
-To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) the desired experiment in the script and run the following command:
-
-> ```console
-> $  bash tools/experiment_SIM2CITY.sh 
-> ```
---------------
-
-<h4>Training on <code>CITY2FOGGY</code></h4>
-We provide six different experimental setups for training the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
-
-The available experiments are:
-- **CITY2FOGGY_baseline_and_pretrained_on_source**
-- **CITY2FOGGY_oracle_and_trained_on_source_and_target**
-- **CITY2FOGGY_with_Dcls_channel_mixing_spatial_attention**
-- **CITY2FOGGY_with_Dcls**
-- **CITY2FOGGY_with_Dcls_channel_mixing**
-- **CITY2FOGGY_with_Dcls_spatial_attention**
-
-To train a specific experiment, uncomment (# CONFIG= ... to # done) in the desired experiment in the script and run the following command:
-
-> ```console
-> $  bash tools/experiment_CITY2FOGGY.sh 
-> ```
---------------
-
-<h4>Training on <code>SIM2CITY</code></h4>
-We provide six different experimental setups for training the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
-
-The available experiments are:
-- **SIM2CITY_baseline_and_pretrained_on_source**
-- **SIM2CITY_oracle_and_trained_on_source_and_target**
-- **SIM2CITY_with_Dcls_channel_mixing_spatial_attention**
-- **SIM2CITY_with_Dcls**
-- **SIM2CITY_with_Dcls_channel_mixing**
-- **SIM2CITY_with_Dcls_spatial_attention**
-
-To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired experiment in the script and run the following command:
-
-> ```console
-> $  bash tools/experiment_SIM2CITY.sh 
-> ```
-
----
-
-##  [ Config Details](#-details)
+###  [ Config Details](#-details)
 
 <details closed><summary>experiment_saved.SIM2CITY_baseline_and_pretrained_on_source</summary>
 
@@ -339,6 +261,81 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 
 ---
 
+
+###  [ Usage](#-usage)
+
+<h4>Evaluation on <code>CITY2FOGGY</code></h4>
+We provide six different experimental setups for evaluating the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
+
+The available experiments are:
+- **CITY2FOGGY_baseline_and_pretrained_on_source**
+- **CITY2FOGGY_oracle_and_trained_on_source_and_target**
+- **CITY2FOGGY_with_Dcls_channel_mixing_spatial_attention**
+- **CITY2FOGGY_with_Dcls**
+- **CITY2FOGGY_with_Dcls_channel_mixing**
+- **CITY2FOGGY_with_Dcls_spatial_attention**
+
+To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) in the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_CITY2FOGGY.sh 
+> ```
+--------------
+
+<h4>Evaluation on <code>SIM2CITY</code></h4>
+We provide six different experimental setups for evaluating the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
+
+The available experiments are:
+- **SIM2CITY_baseline_and_pretrained_on_source**
+- **SIM2CITY_oracle_and_trained_on_source_and_target**
+- **SIM2CITY_with_Dcls_channel_mixing_spatial_attention**
+- **SIM2CITY_with_Dcls**
+- **SIM2CITY_with_Dcls_channel_mixing**
+- **SIM2CITY_with_Dcls_spatial_attention**
+
+To evaluate a specific experiment, uncomment (# python3 tools/test.py ...) the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_SIM2CITY.sh 
+> ```
+--------------
+
+<h4>Training on <code>CITY2FOGGY</code></h4>
+We provide six different experimental setups for training the model on the CITY2FOGGY task. These setups are included in the script `tools/experiment_CITY2FOGGY.sh`.
+
+The available experiments are:
+- **CITY2FOGGY_baseline_and_pretrained_on_source**
+- **CITY2FOGGY_oracle_and_trained_on_source_and_target**
+- **CITY2FOGGY_with_Dcls_channel_mixing_spatial_attention**
+- **CITY2FOGGY_with_Dcls**
+- **CITY2FOGGY_with_Dcls_channel_mixing**
+- **CITY2FOGGY_with_Dcls_spatial_attention**
+
+To train a specific experiment, uncomment (# CONFIG= ... to # done) in the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_CITY2FOGGY.sh 
+> ```
+--------------
+
+<h4>Training on <code>SIM2CITY</code></h4>
+We provide six different experimental setups for training the model on the SIM2CITY task. These setups are included in the script `tools/experiment_SIM2CITY.sh`.
+
+The available experiments are:
+- **SIM2CITY_baseline_and_pretrained_on_source**
+- **SIM2CITY_oracle_and_trained_on_source_and_target**
+- **SIM2CITY_with_Dcls_channel_mixing_spatial_attention**
+- **SIM2CITY_with_Dcls**
+- **SIM2CITY_with_Dcls_channel_mixing**
+- **SIM2CITY_with_Dcls_spatial_attention**
+
+To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired experiment in the script and run the following command:
+
+> ```console
+> $  bash tools/experiment_SIM2CITY.sh 
+> ```
+
+---
 
 ## [ Future Work](#-future)
 We incorporate two additional experiments: 
