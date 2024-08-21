@@ -79,8 +79,8 @@ Overview of our proposed architecture, which is based on DeformableDETR. The FG 
     │   ├── __init__.py
     │   ├── configs
     │   └── models
-            ├── co_detr.py 
-            └── _transformer.py
+            ├── co_detr.py # Architecture are in here
+            └── _transformer.py # Adapters are in here
     ├── requirements.txt
     └── tools
         ├── train.py
@@ -342,6 +342,13 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 > ```console
 > $  bash tools/experiment_SIM2CITY.sh 
 > ```
+
+Adapters are in _transformer.py
+CS Adapter
+class MLP_Adapter_slide8(nn.Module) # line 235
+
+FG Adapter
+def build_Adapter(input_dim, hidden_dim, output_dim): # line 65
 
 ---
 
