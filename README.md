@@ -343,12 +343,21 @@ To train a specific experiment, uncomment (# CONFIG= ... to # done) the desired 
 > $  bash tools/experiment_SIM2CITY.sh 
 > ```
 
-Adapters are in _transformer.py
-CS Adapter
-class MLP_Adapter_slide8(nn.Module) # line 235
+### [ How to modify](#-how-to-modify)
+CS Adapter is in _transformer.py line 235
+> ```
+> class MLP_Adapter_slide8(nn.Module):
+> ```
 
-FG Adapter
-def build_Adapter(input_dim, hidden_dim, output_dim): # line 65
+FG Adapter is in _transformer.py line 65
+> ```
+> def build_Adapter(input_dim, hidden_dim, output_dim): 
+> ```
+
+Full architecture workflow is in co_detr.py line 290
+> ```
+> def forward_train(self, ....
+> ```
 
 ---
 
